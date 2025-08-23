@@ -1,35 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { getPlayerManager, PLAYERMANAGER_EVENTS } from '../PlayerManager';
+import {
+  getPlayerManager,
+  PLAYER_MANAGER_EVENTS,
+} from '../../Managers/PlayerManager';
 import { FaPlay, FaPause, FaVolumeUp } from 'react-icons/fa';
 
 export const ButtonControls = ({}) => {
   const volumeRef = React.useRef(null);
-  const playerManager = getPlayerManager();
 
   useEffect(() => {
     let playerManager = getPlayerManager();
-    playerManager.on(PLAYERMANAGER_EVENTS.VOLUME_CHANGE, onVolumeChange);
+    playerManager.on(PLAYER_MANAGER_EVENTS.VOLUME_CHANGE, onVolumeChange);
     return () => {
-      playerManager.off(PLAYERMANAGER_EVENTS.VOLUME_CHANGE, onVolumeChange);
+      playerManager.off(PLAYER_MANAGER_EVENTS.VOLUME_CHANGE, onVolumeChange);
     };
   }, []);
 
   const togglePlay = () => {
-    // if (playerRef.current) {
-    //   const playerManager = getPlayerManager();
+    const playerManager = getPlayerManager();
     const isPlaying = playerManager.isPlaying;
     playerManager.setIsPlaying(!isPlaying);
-    // }
   };
   const setVolume = (event) => {
     const newVolume = event.target.value;
-    // const playerManager = getPlayerManager();
+    const playerManager = getPlayerManager();
     playerManager.setVolume(newVolume);
-    // volumeRef.current.value = newVolume;
-    // if (playerRef.current) {
-    //   console.log('Setting volume to:', newVolume);
-    //   playerRef.current.volume(newVolume);
-    // }
   };
 
   const onVolumeChange = () => {
@@ -39,37 +34,46 @@ export const ButtonControls = ({}) => {
       volumeRef.current.value = volume;
     }
   };
+  const playerManager = getPlayerManager();
   const isPlaying = playerManager.isPlaying;
 
   return (
     <>
-      <button
-        onClick={togglePlay}
-        style={{
-          marginLeft: '10px',
-          display: 'flex',
-          alignItems: 'center',
-          backgroundColor: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-        }}
-      >
+      <button style={styles.playBtn} onClick={togglePlay}>
         {isPlaying ? <FaPause /> : <FaPlay />}
       </button>
-      <div style={{ marginLeft: '1rem', width: '20%' }}>
+      <div style={styles.volumeControls}>
         <FaVolumeUp />
         <input
           ref={volumeRef}
-          style={{ width: '80px', marginLeft: '10px' }}
+          style={styles.volumeSlider}
           id="volumeControl"
           type="range"
           min="0"
           max="1"
           step="0.01"
-          //value={volume}
           onChange={setVolume}
         />
       </div>
     </>
   );
+};
+
+const styles = {
+  playBtn: {
+    marginLeft: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+  },
+  volumeControls: {
+    marginLeft: '1rem',
+    width: '20%',
+  },
+  volumeSlider: {
+    width: '80px',
+    marginLeft: '10px',
+  },
 };

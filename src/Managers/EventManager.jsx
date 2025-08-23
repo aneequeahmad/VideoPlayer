@@ -2,6 +2,7 @@
  * PlayerManager class-based event manager.
  * Provides on, off, and trigger methods for event handling.
  */
+
 class EventManager {
   constructor() {
     this.listeners = {}; // Stores event names as keys and arrays of listener functions as values

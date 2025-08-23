@@ -13,7 +13,7 @@ export const getPlayerManager = () => {
   return playerManager;
 };
 
-export const PLAYERMANAGER_EVENTS = {
+export const PLAYER_MANAGER_EVENTS = {
   PLAY: 'play',
   PAUSE: 'pause',
   VOLUME_CHANGE: 'volumeChange',
@@ -37,31 +37,31 @@ class PlayerManager extends EventManager {
 
   setTotalDuration(value) {
     this.totalDuration = value;
-    this.trigger(PLAYERMANAGER_EVENTS.DURATION_UPDATE);
+    this.trigger(PLAYER_MANAGER_EVENTS.DURATION_UPDATE);
   }
   setIsPlaying(value) {
     this.isPlaying = value;
     if (value) {
-      this.trigger(PLAYERMANAGER_EVENTS.PLAY);
+      this.trigger(PLAYER_MANAGER_EVENTS.PLAY);
     } else {
-      this.trigger(PLAYERMANAGER_EVENTS.PAUSE);
+      this.trigger(PLAYER_MANAGER_EVENTS.PAUSE);
     }
   }
 
   setVolume(value) {
     this.volume = value;
     console.log('Volume Updated >>>>>>>', value);
-    this.trigger(PLAYERMANAGER_EVENTS.VOLUME_CHANGE);
+    this.trigger(PLAYER_MANAGER_EVENTS.VOLUME_CHANGE);
   }
 
   setCurrentTime(value) {
     this.currentTime = value;
     // console.log('Current Time Updated:', value);
-    this.trigger(PLAYERMANAGER_EVENTS.TIME_UPDATE);
+    this.trigger(PLAYER_MANAGER_EVENTS.TIME_UPDATE);
   }
   seekToTime(value) {
     this.currentTime = value;
     console.log('Current Time Updated:', value);
-    this.trigger(PLAYERMANAGER_EVENTS.SEEK);
+    this.trigger(PLAYER_MANAGER_EVENTS.SEEK);
   }
 }

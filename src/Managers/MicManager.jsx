@@ -8,7 +8,7 @@ export const getMicManager = () => {
   return micManager;
 };
 
-export const MICMANAGER_EVENTS = {
+export const MIC_MANAGER_EVENTS = {
   // Define events for the MicManager
   // These events can be used to manage audio streams
   AUDIO_STREAM_INITIALIZED: 'audioStreamInitialized',
@@ -23,7 +23,7 @@ class MicManager extends EventManager {
   init = () => {
     this.audioStream = null;
     this.initialiseMic();
-    this.trigger(MICMANAGER_EVENTS.MIC_INITIALIZED);
+    this.trigger(MIC_MANAGER_EVENTS.MIC_INITIALIZED);
   };
 
   initialiseMic = async () => {
@@ -35,7 +35,7 @@ class MicManager extends EventManager {
     } catch (err) {
       console.error('Error accessing media devices.', err);
     }
-    this.trigger(MICMANAGER_EVENTS.AUDIO_STREAM_INITIALIZED);
+    this.trigger(MIC_MANAGER_EVENTS.AUDIO_STREAM_INITIALIZED);
   };
 
   getAudioStream = () => {

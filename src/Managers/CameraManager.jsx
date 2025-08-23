@@ -8,7 +8,7 @@ export const getCameraManager = () => {
   return cameraManager;
 };
 
-export const CAMERAMANAGER_EVENTS = {
+export const CAMERA_MANAGER_EVENTS = {
   // Define events for the CameraManager
   // These events can be used to manage video streams
 
@@ -26,7 +26,7 @@ class CameraManager extends EventManager {
     this.videoStream = null;
     this.allCameras = [];
     this.intialiseCamera();
-    this.trigger(CAMERAMANAGER_EVENTS.CAMERA_INITIALIZED);
+    this.trigger(CAMERA_MANAGER_EVENTS.CAMERA_INITIALIZED);
   };
 
   intialiseCamera = async (id) => {
@@ -45,7 +45,7 @@ class CameraManager extends EventManager {
     } catch (err) {
       console.error('Error accessing media devices.', err);
     }
-    this.trigger(CAMERAMANAGER_EVENTS.VIDEO_STREAM_INITIALIZED);
+    this.trigger(CAMERA_MANAGER_EVENTS.VIDEO_STREAM_INITIALIZED);
   };
   getAllCameras = () => {
     //

@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import './App.css';
+import React, { useState, useRef } from 'react';
+import '../../App.css';
 
 import VideoPlayer from './VideoPlayer';
-import DragDrop from './DragDrop';
+import DragDrop from '../../Components/DragDrop';
 import { FaArrowRotateRight } from 'react-icons/fa6';
 
-export default function VideoPlayerRapper() {
+export default function EditorView() {
   const playerRef = useRef(null);
   const [filePath, setFilePath] = useState('');
   const [fileType, setFileType] = useState('');
@@ -75,19 +74,42 @@ export default function VideoPlayerRapper() {
   };
 
   return (
-    <>
+    <div style={styles.editorContainer}>
       <DragDrop handleDrop={handleDrop} onFileChange={onFileChange} />
-      <div style={{ width: '600px', height: '400px' }}>
+      <div style={styles.videoPlayerContainer}>
         <VideoPlayer options={videoJsOptions} onReady={handlePlayerReady} />
       </div>
-      <div className="rotate-icon" onClick={onRotateIconClick}>
+      <div style={styles.rotateIcon} onClick={onRotateIconClick}>
         <FaArrowRotateRight />
       </div>
-      <div>
-        <Link to="/">
-          <button className="home-btn">Home</button>
-        </Link>
-      </div>
-    </>
+    </div>
   );
 }
+
+const styles = {
+  editorContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  videoPlayerContainer: {
+    width: '600px',
+    height: '400px',
+  },
+  rotateIcon: {
+    position: 'absolute',
+    top: '60px',
+    left: '10px',
+    fontSize: '24px',
+    color: 'black',
+    cursor: 'pointer',
+    width: '40px',
+    backgroundColor: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '5px',
+    borderRadius: '5px',
+  },
+};

@@ -1,31 +1,34 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 // import { FaPlay, FaPause, FaVolumeUp } from 'react-icons/fa';
 // import { MdFullscreen } from "react-icons/md";
-import CustomSeekBar from './Controls/CustomSeekBar';
-import { getPlayerManager, PLAYERMANAGER_EVENTS } from './PlayerManager';
-import { ButtonControls } from './Controls/ButtonControls';
+import CustomSeekBar from '../../Controls/CustomSeekBar';
+import {
+  getPlayerManager,
+  PLAYER_MANAGER_EVENTS,
+} from '../../../Managers/PlayerManager';
+import { ButtonControls } from '../../Controls/ButtonControls';
 
-export const VideoJS = (props) => {
-  const videoRef = React.useRef(null);
-  const playerRef = React.useRef(null);
+export const VideoPlayer = (props) => {
+  const videoRef = useRef(null);
+  const playerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const { options, onReady } = props;
 
-  const dataRef = React.useRef({});
+  const dataRef = useRef({});
 
   useEffect(() => {
     let playerManager = getPlayerManager();
-    playerManager.on(PLAYERMANAGER_EVENTS.PLAY, onPlay);
-    playerManager.on(PLAYERMANAGER_EVENTS.PAUSE, onPause);
-    playerManager.on(PLAYERMANAGER_EVENTS.SEEK, currentTimeChange);
-    playerManager.on(PLAYERMANAGER_EVENTS.VOLUME_CHANGE, onVolumeChange);
+    playerManager.on(PLAYER_MANAGER_EVENTS.PLAY, onPlay);
+    playerManager.on(PLAYER_MANAGER_EVENTS.PAUSE, onPause);
+    playerManager.on(PLAYER_MANAGER_EVENTS.SEEK, currentTimeChange);
+    playerManager.on(PLAYER_MANAGER_EVENTS.VOLUME_CHANGE, onVolumeChange);
     return () => {
-      playerManager.off(PLAYERMANAGER_EVENTS.PLAY, onPlay);
-      playerManager.off(PLAYERMANAGER_EVENTS.PAUSE, onPause);
-      playerManager.off(PLAYERMANAGER_EVENTS.SEEK, currentTimeChange);
-      playerManager.off(PLAYERMANAGER_EVENTS.VOLUME_CHANGE, onVolumeChange);
+      playerManager.off(PLAYER_MANAGER_EVENTS.PLAY, onPlay);
+      playerManager.off(PLAYER_MANAGER_EVENTS.PAUSE, onPause);
+      playerManager.off(PLAYER_MANAGER_EVENTS.SEEK, currentTimeChange);
+      playerManager.off(PLAYER_MANAGER_EVENTS.VOLUME_CHANGE, onVolumeChange);
     };
   }, []);
 
@@ -73,7 +76,6 @@ export const VideoJS = (props) => {
   const onPlay = () => {
     playerRef.current.play();
     setIsPlaying(true);
-    console.log('Player is playing');
     if (!dataRef.current.updateInterval) {
       dataRef.current.updateInterval = setInterval(() => {
         // console.log('Updating current time...');
@@ -85,7 +87,6 @@ export const VideoJS = (props) => {
   const onPause = () => {
     playerRef.current.pause();
     setIsPlaying(false);
-    console.log('Player is paused');
     clearInterval(dataRef.current.updateInterval);
     dataRef.current.updateInterval = null;
   };
@@ -93,42 +94,40 @@ export const VideoJS = (props) => {
     const playerManager = getPlayerManager();
     const currentTime = playerManager.currentTime;
     playerRef.current.currentTime(currentTime);
-    // console.log('Current time updated:', currentTime);
   };
   const onVolumeChange = () => {
     const playerManager = getPlayerManager();
     const volume = playerManager.volume;
     if (playerRef.current) {
       playerRef.current.volume(volume);
-      // console.log('Volume updated:', volume);
     }
   };
-
-  console.log('RENDERING VIDEO PLAYER AGAIN >>>>> ');
 
   return (
     <div data-vjs-player>
       <div ref={videoRef} style={{ position: 'relative' }}>
-        <div
-          style={{
-            position: 'absolute',
-            display: 'flex',
-            zIndex: 100,
-            height: '2rem',
-            bottom: 0,
-            width: '100%',
-            backgroundColor: 'white',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', width: `100%` }}>
-            <ButtonControls />
-            {playerRef.current && <CustomSeekBar />}
-            {/* {playerRef.current && <MdFullscreen onClick={onFullScreenClick} />} */}
-          </div>
+        <div style={styles.controlsContainer}>
+          <ButtonControls />
+          {playerRef.current && <CustomSeekBar />}
         </div>
       </div>
     </div>
   );
 };
 
-export default VideoJS;
+export default VideoPlayer;
+
+const styles = {
+  controlsContainer: {
+    position: 'absolute',
+    display: 'flex',
+    zIndex: '100',
+    height: '2rem',
+    bottom: '0',
+    width: '100%',
+    backgroundColor: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    width: '100%',
+  },
+};

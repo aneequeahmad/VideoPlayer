@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getPlayerManager, PLAYERMANAGER_EVENTS } from '../PlayerManager';
+import {
+  getPlayerManager,
+  PLAYER_MANAGER_EVENTS,
+} from '../../Managers/PlayerManager';
 
 const CustomSeekBar = ({}) => {
   const seekbarRef = React.useRef(null);
@@ -8,14 +11,17 @@ const CustomSeekBar = ({}) => {
   const [totalDuration, setTotalDuration] = useState(0);
   useEffect(() => {
     let playerManager = getPlayerManager();
-    playerManager.on(PLAYERMANAGER_EVENTS.TIME_UPDATE, onTimeUpdate);
-    playerManager.on(PLAYERMANAGER_EVENTS.SEEK, onTimeUpdate);
-    playerManager.on(PLAYERMANAGER_EVENTS.DURATION_UPDATE, onDurationUpdate);
+    playerManager.on(PLAYER_MANAGER_EVENTS.TIME_UPDATE, onTimeUpdate);
+    playerManager.on(PLAYER_MANAGER_EVENTS.SEEK, onTimeUpdate);
+    playerManager.on(PLAYER_MANAGER_EVENTS.DURATION_UPDATE, onDurationUpdate);
 
     return () => {
-      playerManager.off(PLAYERMANAGER_EVENTS.TIME_UPDATE, onTimeUpdate);
-      playerManager.off(PLAYERMANAGER_EVENTS.SEEK, onTimeUpdate);
-      playerManager.off(PLAYERMANAGER_EVENTS.DURATION_UPDATE, onDurationUpdate);
+      playerManager.off(PLAYER_MANAGER_EVENTS.TIME_UPDATE, onTimeUpdate);
+      playerManager.off(PLAYER_MANAGER_EVENTS.SEEK, onTimeUpdate);
+      playerManager.off(
+        PLAYER_MANAGER_EVENTS.DURATION_UPDATE,
+        onDurationUpdate,
+      );
     };
   }, []);
 
@@ -52,11 +58,11 @@ const CustomSeekBar = ({}) => {
   };
   return (
     <>
-      <div className="custom-seekbar-container" style={{ width: '50%' }}>
+      <div style={styles.seekBarContainer}>
         <input
           // id={'slider'}
           ref={seekbarRef}
-          style={{ width: '100%', transform: 'transition ' }}
+          style={styles.seekBar}
           type="range"
           min="0"
           max={totalDuration}
@@ -65,12 +71,29 @@ const CustomSeekBar = ({}) => {
           className="custom-seekbar"
         />
       </div>
-      <div
-        ref={durationRef}
-        style={{ marginLeft: '10px', color: 'black', opacity: '0.5' }}
-      ></div>
+      <div ref={durationRef} style={styles.durationText}></div>
     </>
   );
 };
 
+const styles = {
+  seekBarContainer: {
+    width: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  seekBar: {
+    width: '100%',
+    // height: '5px',
+    // backgroundColor: '#ddd',
+    // borderRadius: '5px',
+    // outline: 'none',
+  },
+  durationText: {
+    marginLeft: '10px',
+    color: 'black',
+    opacity: '0.5',
+  },
+};
 export default CustomSeekBar;

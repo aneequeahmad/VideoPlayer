@@ -151,16 +151,51 @@ ipcMain.handle('convert-video', async (_, inputPath, output) => {
 // Handle the 'save-blob' request from the renderer
   ipcMain.handle('save-blob', async (event, buffer, filename) => {
       try {
-            const downloadsPath = path.join(app.getPath('downloads'), 'recordings');
-            fs.ensureDirSync(downloadsPath);
+          const today = new Date();
+          const date = today.getFullYear()+'.'+(today.getMonth()+1)+'.'+today.getDate();
+          const time = today.getHours() + "." + today.getMinutes() + "." + today.getSeconds();
+          const pathName = date+'-'+time;
+          const downloadsPath = path.join(app.getPath('downloads'), `recordings/${pathName}`);
+          fs.ensureDirSync(downloadsPath);
           const filePath = path.join(downloadsPath, filename);
           fs.writeFileSync(filePath, buffer);
           return { success: true, filePath };
-      } catch (error) {
+      } catch (error: any) {
           console.error('Failed to save audio:', error);
           return { success: false, error: error.message };
       }
   });
+
+  ipcMain.handle('get-folder-content', async (event, folderPath) => {
+    try {
+        // const downloadsPath = path.join(app.getPath('downloads'), `recordings`);
+        const items = await fs.promises.readdir(folderPath, { withFileTypes: true });
+        const content = items.map(item => {
+            return {
+                ...item,
+                isDirectory: item.isDirectory(),
+                isFile: item.isFile()
+            };
+        });
+        return content;
+    } catch (error) {
+        console.error('Failed to read directory:', error);
+        return [];
+    }
+});
+
+ipcMain.handle('read-file-as-blob', async (event, filePath) => {
+  try {
+    const fileBuffer = fs.readFileSync(filePath); // Or use fs.readFile for async
+    // In Electron's renderer process (which is a Chromium environment),
+    // you can create a Blob directly from a Buffer.
+    // However, sending the raw buffer through IPC is more straightforward.
+    return fileBuffer; 
+  } catch (error) {
+    console.error('Error reading file:', error);
+    throw error;
+  }
+});
 
 app
   .whenReady()
