@@ -9,7 +9,6 @@ import {
 } from '../../../Managers/CameraManager';
 import { getMicManager } from '../../../Managers/MicManager';
 import { getViewManager } from '../../../Managers/ViewManager';
-import video from 'fluent-ffmpeg/lib/options/video';
 
 export default function CameraView(params) {
   const videoRef = useRef(null);

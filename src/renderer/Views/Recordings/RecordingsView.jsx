@@ -1,6 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import VideoPlayer from '../Editor/VideoPlayer';
-import video from 'fluent-ffmpeg/lib/options/video';
 
 export default function RecordingsView() {
   const playerRef = useRef(null);
