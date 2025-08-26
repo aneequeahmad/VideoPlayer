@@ -8,11 +8,11 @@ export default DragDrop = (props) => {
     <>
       <div
         style={styles.dragDropContainer}
-        onDrop={handleDrop}
-        onDragOver={(event) => event.preventDefault()}
+        //onDrop={handleDrop}
+        //onDragOver={(event) => event.preventDefault()}
       >
-        <span style={styles.fakeBtn}>Choose files</span>
-        <span style={styles.fileMsg}>or drag and drop files here</span>
+        <span style={styles.fakeBtn}>Import</span>
+        {/* <span style={styles.fileMsg}>or drag and drop files here</span> */}
         <input
           type="file"
           id="videoFileInput"
@@ -27,14 +27,15 @@ export default DragDrop = (props) => {
 
 const styles = {
   dragDropContainer: {
-    width: '550px',
-    backgroundColor: '#868287',
+    width: '100px',
+    backgroundColor: 'white',
     marginBottom: '2rem',
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
     maxWidth: '100%',
-    padding: '25px',
+    padding: '10px',
     border: '1px dashed rgba(255, 255, 255, 0.4)',
     borderRadius: '3px',
     transition: '0.2s',
@@ -46,11 +47,15 @@ const styles = {
     flexShrink: '0',
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
     border: '1px solid rgba(255, 255, 255, 0.1)',
-    borderRadius: '3px',
-    padding: '8px 15px',
-    marginRight: '10px',
+    //borderRadius: '3px',
+    //padding: '8px 15px',
+    //marginRight: '10px',
     fontSize: '12px',
     textTransform: 'uppercase',
+    fontWeight: '600',
+    '&:hover': {
+      cursor: 'pointer',
+    },
   },
   fileMsg: {
     fontSize: 'small',

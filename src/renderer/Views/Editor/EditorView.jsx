@@ -75,10 +75,13 @@ export default function EditorView() {
 
   return (
     <div style={styles.editorContainer}>
-      <DragDrop handleDrop={handleDrop} onFileChange={onFileChange} />
       <div style={styles.videoPlayerContainer}>
         <VideoPlayer options={videoJsOptions} onReady={handlePlayerReady} />
       </div>
+      <div style={styles.importFileContainer}>
+        <DragDrop handleDrop={handleDrop} onFileChange={onFileChange} />
+      </div>
+
       <div style={styles.rotateIcon} onClick={onRotateIconClick}>
         <FaArrowRotateRight />
       </div>
@@ -89,17 +92,23 @@ export default function EditorView() {
 const styles = {
   editorContainer: {
     display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
+    // flexDirection: 'column',
+    // alignItems: 'center',
     justifyContent: 'center',
+    marginTop: '2rem',
   },
   videoPlayerContainer: {
     width: '600px',
     height: '400px',
   },
+  importFileContainer: {
+    position: 'absolute',
+    top: '4rem',
+    left: '10px',
+  },
   rotateIcon: {
     position: 'absolute',
-    top: '60px',
+    top: '8rem',
     left: '10px',
     fontSize: '24px',
     color: 'black',
