@@ -5,6 +5,7 @@ import VideoPlayer from './VideoPlayer';
 import DragDrop from '../../Components/DragDrop';
 import { FaArrowRotateRight } from 'react-icons/fa6';
 import { getViewManager } from '../../../Managers/ViewManager';
+import BackButton from '../../Components/BackButton';
 
 export default function EditorView() {
   const playerRef = useRef(null);
@@ -74,19 +75,12 @@ export default function EditorView() {
     );
   };
 
-  const onBackBtnClick = () => {
-    const viewManager = getViewManager();
-    viewManager.goBack();
-  };
-
   return (
     <div style={styles.editorContainer}>
       <div style={styles.videoPlayerContainer}>
         <VideoPlayer options={videoJsOptions} onReady={handlePlayerReady} />
       </div>
-      <div onClick={onBackBtnClick} style={styles.backBtn}>
-        Back
-      </div>
+      <BackButton />
       <div style={styles.importFileContainer}>
         <DragDrop handleDrop={handleDrop} onFileChange={onFileChange} />
       </div>
@@ -114,17 +108,6 @@ const styles = {
     position: 'absolute',
     top: '4rem',
     left: '10px',
-  },
-  backBtn: {
-    position: 'absolute',
-    width: '40px',
-    backgroundColor: 'white',
-    top: '1rem',
-    left: '10px',
-    fontSize: '18px',
-    padding: '5px',
-    borderRadius: '5px',
-    cursor: 'pointer',
   },
   rotateIcon: {
     position: 'absolute',
