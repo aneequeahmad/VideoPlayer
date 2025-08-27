@@ -146,6 +146,34 @@ ipcMain.handle('convert-video', async (_, inputPath, output) => {
       console.log('************ Video rotation complete ************')})
     .on('error', (err: any) => console.error('Error during rotation:', err));
   });
+});
+ipcMain.handle('unsharp-video', async (_, inputPath, output) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+    .videoFilter('unsharp=5:5:1.0:5:5:0.0') // Apply unsharp mask
+    .save(output)
+    .on('end', () => { 
+      console.log('************ Unsharp filter applied ************')
+      return {success: true, output}
+    })
+    .on('error', (err: any) => console.error('Error during unsharp filter application:', err));
+  });
+}); 
+ipcMain.handle('remove-audio', async (_, inputPath, output) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+    .noAudio() // Remove audio
+    .outputOptions('-c', 'copy') // Copies video stream without re-encoding
+    .save(output)
+    .on('end', () => { 
+      console.log('************ Audio removed from video ************')
+      return {success: true, output}
+    })
+    .on('error', (err: any) => {
+      console.error('Error during audio removal:', err)
+      return { success: false, error: err.message };
+    });
+  });
 }); 
 
 // Handle the 'save-blob' request from the renderer

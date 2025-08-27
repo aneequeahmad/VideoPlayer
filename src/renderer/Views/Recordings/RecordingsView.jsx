@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import VideoPlayer from '../Editor/VideoPlayer';
+import BackButton from '../../Components/BackButton';
 
 export default function RecordingsView() {
   const playerRef = useRef(null);
@@ -55,31 +56,34 @@ export default function RecordingsView() {
     }
   };
   return (
-    <div style={styles.recordingsContainer}>
-      <FolderStructure
-        currentPath={currentPath}
-        setCurrentPath={setCurrentPath}
-        setFilePath={setFilePath}
-      />
-      <div style={styles.folderFileList}>
-        {folderContent.map((item, index) => (
-          <div key={index}>
-            <div
-              onClick={() =>
-                fetchFolderContent(`${item.path}/${item.name}`, item)
-              }
-            >
-              {item.name}
+    <>
+      <BackButton />
+      <div style={styles.recordingsContainer}>
+        <FolderStructure
+          currentPath={currentPath}
+          setCurrentPath={setCurrentPath}
+          setFilePath={setFilePath}
+        />
+        <div style={styles.folderFileList}>
+          {folderContent.map((item, index) => (
+            <div key={index}>
+              <div
+                onClick={() =>
+                  fetchFolderContent(`${item.path}/${item.name}`, item)
+                }
+              >
+                {item.name}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-      {!!filePath ? (
-        <div style={styles.videoPlayerContainer}>
-          <VideoPlayer options={videoJsOptions} onReady={handlePlayerReady} />
+          ))}
         </div>
-      ) : null}
-    </div>
+        {!!filePath ? (
+          <div style={styles.videoPlayerContainer}>
+            <VideoPlayer options={videoJsOptions} onReady={handlePlayerReady} />
+          </div>
+        ) : null}
+      </div>
+    </>
   );
 }
 

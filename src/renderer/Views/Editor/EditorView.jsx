@@ -68,10 +68,41 @@ export default function EditorView() {
     }
   };
 
-  const onRotateIconClick = async () => {
+  const onRotateBtnClick = async () => {
     const msg = await window.ffmpegAPI.convertVideo(
       absolutePath,
       '/Users/aneequeahmad/Documents/ai-sample-videos/latest-rotated-video.mp4',
+    );
+  };
+
+  const onUnsharpBtnClick = async () => {
+    const outputPath =
+      '/Users/aneequeahmad/Documents/ai-sample-videos/latest-unsharp-video.mp4';
+    const msg = await window.ffmpegAPI.unsharpVideo(absolutePath, outputPath);
+    // After processing, update the video player to play the new unsharp video
+    const objectURL = URL.createObjectURL(
+      new File(
+        [await window.electronAPI.readFileAsBlob(outputPath)],
+        'latest-unsharp-video.mp4',
+        { type: 'video/mp4' },
+      ),
+    );
+    console.log('Object URL >>>>>', objectURL);
+    setFilePath(objectURL);
+    setFileType('video/mp4');
+  };
+
+  const onRemoveAudioClick = async () => {
+    const outputPath =
+      '/Users/aneequeahmad/Documents/ai-sample-videos/no-audio-video.mp4';
+    const msg = await window.ffmpegAPI.removeAudio(absolutePath, outputPath);
+    // After processing, update the video player to play the new video without audio
+    const objectURL = URL.createObjectURL(
+      new File(
+        [await window.electronAPI.readFileAsBlob(outputPath)],
+        'latest-no-audio-video.mp4',
+        { type: 'video/mp4' },
+      ),
     );
   };
 
@@ -85,8 +116,23 @@ export default function EditorView() {
         <DragDrop handleDrop={handleDrop} onFileChange={onFileChange} />
       </div>
 
-      <div style={styles.rotateIcon} onClick={onRotateIconClick}>
+      <div
+        style={{ ...styles.filterBtn, ...styles.rotateIcon }}
+        onClick={onRotateBtnClick}
+      >
         <FaArrowRotateRight />
+      </div>
+      <div
+        style={{ ...styles.filterBtn, ...styles.unShapBtn }}
+        onClick={onUnsharpBtnClick}
+      >
+        Unsharp
+      </div>
+      <div
+        style={{ ...styles.filterBtn, ...styles.removeAudioBtn }}
+        onClick={onRemoveAudioClick}
+      >
+        Remove Audio
       </div>
     </div>
   );
@@ -109,19 +155,27 @@ const styles = {
     top: '4rem',
     left: '10px',
   },
-  rotateIcon: {
+  filterBtn: {
     position: 'absolute',
-    top: '8rem',
     left: '10px',
-    fontSize: '24px',
+    fontSize: '16px',
     color: 'black',
     cursor: 'pointer',
-    width: '40px',
+    // width: '40px',
     backgroundColor: 'white',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     padding: '5px',
     borderRadius: '5px',
+  },
+  rotateIcon: {
+    top: '8rem',
+  },
+  unShapBtn: {
+    top: '12rem',
+  },
+  removeAudioBtn: {
+    top: '15rem',
   },
 };

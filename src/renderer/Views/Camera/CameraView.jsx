@@ -9,6 +9,7 @@ import {
 } from '../../../Managers/CameraManager';
 import { getMicManager } from '../../../Managers/MicManager';
 import { getViewManager } from '../../../Managers/ViewManager';
+import BackButton from '../../Components/BackButton';
 
 export default function CameraView(params) {
   const videoRef = useRef(null);
@@ -54,28 +55,23 @@ export default function CameraView(params) {
   };
 
   return (
-    <div style={styles.cameraViewContainer}>
-      <div
-        onClick={() => {
-          const viewManager = getViewManager();
-          viewManager.goBack();
-        }}
-      >
-        Back
+    <>
+      <BackButton />
+      <div style={styles.cameraViewContainer}>
+        <div style={styles.videoViewContainer}>
+          <video ref={videoRef} autoPlay style={styles.videoView} />
+          {!isRecording ? (
+            <button style={styles.recordingBtn} onClick={onStartRecording}>
+              Start Recording
+            </button>
+          ) : (
+            <button style={styles.recordingBtn} onClick={onStopRecording}>
+              Stop Recording
+            </button>
+          )}
+        </div>
       </div>
-      <div style={styles.videoViewContainer}>
-        <video ref={videoRef} autoPlay style={styles.videoView} />
-        {!isRecording ? (
-          <button style={styles.recordingBtn} onClick={onStartRecording}>
-            Start Recording
-          </button>
-        ) : (
-          <button style={styles.recordingBtn} onClick={onStopRecording}>
-            Stop Recording
-          </button>
-        )}
-      </div>
-    </div>
+    </>
   );
 }
 
