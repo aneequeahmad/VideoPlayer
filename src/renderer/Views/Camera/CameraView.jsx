@@ -10,10 +10,13 @@ import {
 import { getMicManager } from '../../../Managers/MicManager';
 import { getViewManager } from '../../../Managers/ViewManager';
 import BackButton from '../../Components/BackButton';
+import { toHHMMSS } from '../../../Utils';
 
 export default function CameraView(params) {
   const videoRef = useRef(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [timerInterval, setTimerInterval] = useState(null);
+  const durationRef = useRef(null);
 
   console.log(' rendered VideoRecorder --- ', params);
   useEffect(() => {
@@ -39,16 +42,28 @@ export default function CameraView(params) {
       videoRef.current.srcObject = videoStream;
     }
   };
-
   const onStartRecording = () => {
     let recorderManager = getRecorderManager();
     recorderManager.initializeRecorder(RECORDING_STREAM_TYPES.AUDIO);
     recorderManager.initializeRecorder(RECORDING_STREAM_TYPES.VIDEO);
     recorderManager.startRecording();
     setIsRecording(true);
+    let startTime = Date.now();
+    const timerInterval = setInterval(() => {
+      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+      console.log(`Recording time: ${elapsedSeconds} seconds`);
+      durationRef.current.textContent = `${toHHMMSS(elapsedSeconds)}`;
+    }, 1000);
+    setTimerInterval(timerInterval);
+
+    // Store interval and startTime in state for cleanup and display if needed
   };
 
   const onStopRecording = () => {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      setTimerInterval(null);
+    }
     let recorderManager = getRecorderManager();
     recorderManager.stopRecording();
     setIsRecording(false);
@@ -70,6 +85,9 @@ export default function CameraView(params) {
             </button>
           )}
         </div>
+        {isRecording && (
+          <div ref={durationRef} style={styles.durationText}></div>
+        )}
       </div>
     </>
   );
@@ -98,4 +116,14 @@ const styles = {
     alignItems: 'center',
   },
   videoView: { width: '600px', borderRadius: '10px' },
+  durationText: {
+    marginLeft: '10px',
+    color: 'white',
+    width: '50px',
+    backgroundColor: 'red',
+    padding: '5px',
+    borderRadius: '5px',
+    textAlign: 'center',
+    marginTop: '10px',
+  },
 };
