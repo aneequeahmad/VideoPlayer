@@ -221,11 +221,11 @@ class RecordingManager extends EventManager {
       const buffer = new Uint8Array(arrayBuffer);
       // Call the secure function from the preload script
       const result = await window.electronAPI.saveBlob(buffer, filename);
-      if (result.success) {
-        alert(`File saved successfully to: ${result.filePath}`);
-      } else {
-        alert(`Failed to save file: ${result.error}`);
-      }
+      // if (result.success) {
+      //   alert(`File saved successfully to: ${result.filePath}`);
+      // } else {
+      //   alert(`Failed to save file: ${result.error}`);
+      // }
     } catch (error) {
       console.error('Error saving file:', error);
       alert('An unexpected error occurred while saving the file.');
