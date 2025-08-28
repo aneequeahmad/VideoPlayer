@@ -12,10 +12,8 @@ contextBridge.exposeInMainWorld('ffmpegAPI', {
          const path = webUtils.getPathForFile(file);
          return path;
   },
-  unsharpVideo: (input: string, output: string) =>
-    ipcRenderer.invoke('unsharp-video', input, output),
   removeAudio: (input: string, output: string) =>
-    ipcRenderer.invoke('remove-audio', input, output),  
+    ipcRenderer.invoke('remove-audio', input, output), 
 });
 contextBridge.exposeInMainWorld('electronAPI', {
     // Expose a function to save audio that invokes the main process handler

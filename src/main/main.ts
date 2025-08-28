@@ -137,28 +137,37 @@ app.on('window-all-closed', () => {
   }
 });
 
-ipcMain.handle('convert-video', async (_, inputPath, output) => {
+ipcMain.handle('convert-video', async (_, inputPath, options) => {
   return new Promise((resolve, reject) => {
-    ffmpeg(inputPath)
-    .videoFilter('transpose=1') // Rotate 90 degrees clockwise
-    .save(output)
-    .on('end', () => { 
-      console.log('************ Video rotation complete ************')})
-    .on('error', (err: any) => console.error('Error during rotation:', err));
+    try {
+      const chunks: Buffer[] = [];
+      ffmpeg(inputPath)
+        .inputOptions([])
+        .outputOptions(options.outputOptions || [])
+        .videoCodec(options.videoCodec || 'libx264')
+        .audioCodec(options.audioCodec || 'aac')
+        .format(options.format || 'matroska')
+        .on('error', (error) => {
+          reject(new Error(`FFmpeg error: ${error.message}`));
+        })
+        .on('stderr', (stderrLine) => {
+          console.log('FFmpeg stderr:', stderrLine);
+        })
+        .on('end', () => {
+          const buffer = Buffer.concat(chunks);
+          console.log("BUFFEER IS HERE ::::::::::::", buffer);
+          resolve(buffer);
+        })
+        .pipe(null, { end: true })
+        .on('data', (chunk) => {
+          chunks.push(chunk);
+        });
+    } catch (error) {
+      reject(error);
+    }
   });
 });
-ipcMain.handle('unsharp-video', async (_, inputPath, output) => {
-  return new Promise((resolve, reject) => {
-    ffmpeg(inputPath)
-    .videoFilter('unsharp=5:5:1.0:5:5:0.0') // Apply unsharp mask
-    .save(output)
-    .on('end', () => { 
-      console.log('************ Unsharp filter applied ************')
-      return {success: true, output}
-    })
-    .on('error', (err: any) => console.error('Error during unsharp filter application:', err));
-  });
-}); 
+
 ipcMain.handle('remove-audio', async (_, inputPath, output) => {
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
@@ -174,7 +183,7 @@ ipcMain.handle('remove-audio', async (_, inputPath, output) => {
       return { success: false, error: err.message };
     });
   });
-}); 
+});
 
 // Handle the 'save-blob' request from the renderer
   ipcMain.handle('save-blob', async (event, buffer, filename) => {

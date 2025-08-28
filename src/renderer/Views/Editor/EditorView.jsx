@@ -11,7 +11,11 @@ export default function EditorView() {
   const playerRef = useRef(null);
   const [filePath, setFilePath] = useState('');
   const [fileType, setFileType] = useState('');
+  const [isProcessingVideo, setProcessingVideo] = useState(false);
   const [absolutePath, setAbsolutePath] = useState('');
+  const [brightness, setBrightness] = useState(0);
+  const [saturation, setSaturation] = useState(1.0);
+  const [contrast, setContrast] = useState(1.0);
 
   const videoJsOptions = {
     responsive: true,
@@ -68,30 +72,6 @@ export default function EditorView() {
     }
   };
 
-  const onRotateBtnClick = async () => {
-    const msg = await window.ffmpegAPI.convertVideo(
-      absolutePath,
-      '/Users/aneequeahmad/Documents/ai-sample-videos/latest-rotated-video.mp4',
-    );
-  };
-
-  const onUnsharpBtnClick = async () => {
-    const outputPath =
-      '/Users/aneequeahmad/Documents/ai-sample-videos/latest-unsharp-video.mp4';
-    const msg = await window.ffmpegAPI.unsharpVideo(absolutePath, outputPath);
-    // After processing, update the video player to play the new unsharp video
-    const objectURL = URL.createObjectURL(
-      new File(
-        [await window.electronAPI.readFileAsBlob(outputPath)],
-        'latest-unsharp-video.mp4',
-        { type: 'video/mp4' },
-      ),
-    );
-    console.log('Object URL >>>>>', objectURL);
-    setFilePath(objectURL);
-    setFileType('video/mp4');
-  };
-
   const onRemoveAudioClick = async () => {
     const outputPath =
       '/Users/aneequeahmad/Documents/ai-sample-videos/no-audio-video.mp4';
@@ -106,6 +86,98 @@ export default function EditorView() {
     );
   };
 
+  const onRotateBtnClick = async () => {
+    const options = {
+      outputOptions: ['-vf transpose=1', '-preset ultrafast'],
+    };
+    applyFfmpegCommands(options);
+  };
+
+  const onGreyScaleBtnClick = async () => {
+    const options = {
+      outputOptions: ['-vf format=gray', '-preset ultrafast'],
+    };
+    applyFfmpegCommands(options);
+  };
+
+  const onBlurEffectClick = async () => {
+    const options = {
+      outputOptions: ['-vf boxblur=5:1', '-preset ultrafast'],
+    };
+    applyFfmpegCommands(options);
+  };
+
+  const onSharpVideoClick = async () => {
+    const options = {
+      outputOptions: ['-vf unsharp=5:5:1.0:5:5:0.0', '-preset ultrafast'],
+    };
+    applyFfmpegCommands(options);
+  };
+  const onBrightnessChange = async (value) => {
+    setBrightness(value);
+    setProcessingVideo(true);
+    const options = {
+      outputOptions: [
+        '-filter_complex',
+        `[0:v]eq=brightness=${value}[v]`,
+        '-map',
+        '[v]',
+        '-map',
+        '0:a?', // include audio if exists
+        '-c:a',
+        'copy', // copy audio without re-encoding
+      ],
+    };
+    applyFfmpegCommands(options);
+  };
+
+  const onSaturationChange = (value) => {
+    setSaturation(value);
+    setProcessingVideo(true);
+    const options = {
+      outputOptions: [
+        '-filter_complex',
+        `[0:v]eq=saturation=${value}[v]`,
+        '-map',
+        '[v]',
+        '-map',
+        '0:a?', // include audio if exists
+        '-c:a',
+        'copy', // copy audio without re-encoding
+      ],
+    };
+    applyFfmpegCommands(options);
+  };
+
+  const onContrastChange = (value) => {
+    setContrast(value);
+    setProcessingVideo(true);
+    const options = {
+      outputOptions: [
+        '-filter_complex',
+        `[0:v]eq=contrast=${value}[v]`,
+        '-map',
+        '[v]',
+        '-map',
+        '0:a?', // include audio if exists
+        '-c:a',
+        'copy', // copy audio without re-encoding
+      ],
+    };
+    applyFfmpegCommands(options);
+  };
+
+  const applyFfmpegCommands = async (options) => {
+    const videoBuffer = await window.ffmpegAPI.convertVideo(
+      absolutePath,
+      options,
+    );
+    const blob = new Blob([videoBuffer], { type: 'video/mp4' });
+    const blobUrl = URL.createObjectURL(blob);
+    setFilePath(blobUrl);
+    setProcessingVideo(false);
+  };
+
   return (
     <div style={styles.editorContainer}>
       <div style={styles.videoPlayerContainer}>
@@ -113,7 +185,7 @@ export default function EditorView() {
       </div>
       <BackButton />
       <div style={styles.importFileContainer}>
-        <DragDrop handleDrop={handleDrop} onFileChange={onFileChange} />
+        <DragDrop onFileChange={onFileChange} />
       </div>
 
       <div
@@ -123,16 +195,67 @@ export default function EditorView() {
         <FaArrowRotateRight />
       </div>
       <div
-        style={{ ...styles.filterBtn, ...styles.unShapBtn }}
-        onClick={onUnsharpBtnClick}
+        style={{ ...styles.filterBtn, ...styles.greyScaleBtn }}
+        onClick={onGreyScaleBtnClick}
       >
-        Unsharp
+        Grey Scale
+      </div>
+      <div
+        style={{ ...styles.filterBtn, ...styles.blurEffectBtn }}
+        onClick={onBlurEffectClick}
+      >
+        Blur Effect
       </div>
       <div
         style={{ ...styles.filterBtn, ...styles.removeAudioBtn }}
         onClick={onRemoveAudioClick}
       >
         Remove Audio
+      </div>
+      <div
+        style={{ ...styles.filterBtn, ...styles.sharpBtn }}
+        onClick={onSharpVideoClick}
+      >
+        Sharp
+      </div>
+      <div style={{ ...styles.filterBtn, ...styles.brightnessSlider }}>
+        <label style={{ fontSize: '12px' }}>Brightness</label>
+        <input
+          style={{ width: '80px' }}
+          type="range"
+          min="-1"
+          max="1"
+          step="0.5"
+          value={brightness}
+          onChange={(e) => onBrightnessChange(parseFloat(e.target.value))}
+          disabled={isProcessingVideo || !filePath}
+        />
+      </div>
+      <div style={{ ...styles.filterBtn, ...styles.saturationSlider }}>
+        <label style={{ fontSize: '12px' }}>Saturation</label>
+        <input
+          style={{ width: '80px' }}
+          type="range"
+          min="0"
+          max="3"
+          step="0.5"
+          value={saturation}
+          onChange={(e) => onSaturationChange(parseFloat(e.target.value))}
+          disabled={isProcessingVideo || !filePath}
+        />
+      </div>
+      <div style={{ ...styles.filterBtn, ...styles.contrastSlider }}>
+        <label style={{ fontSize: '12px' }}>Contrast</label>
+        <input
+          style={{ width: '80px' }}
+          type="range"
+          min="0"
+          max="2"
+          step="0.5"
+          value={contrast}
+          onChange={(e) => onContrastChange(parseFloat(e.target.value))}
+          disabled={isProcessingVideo || !filePath}
+        />
       </div>
     </div>
   );
@@ -172,10 +295,25 @@ const styles = {
   rotateIcon: {
     top: '8rem',
   },
-  unShapBtn: {
+  greyScaleBtn: {
     top: '12rem',
   },
   removeAudioBtn: {
     top: '15rem',
+  },
+  blurEffectBtn: {
+    top: '18rem',
+  },
+  sharpBtn: {
+    top: '21rem',
+  },
+  brightnessSlider: {
+    top: '24rem',
+  },
+  saturationSlider: {
+    top: '27rem',
+  },
+  contrastSlider: {
+    top: '30rem',
   },
 };
