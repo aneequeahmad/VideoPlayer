@@ -7,6 +7,7 @@ import BackButton from '../../Components/BackButton';
 
 export default function EditorView() {
   const playerRef = useRef(null);
+  const [videoBuffer, setVideoBuffer] = useState(null);
   const [filePath, setFilePath] = useState('');
   const [fileType, setFileType] = useState('');
   const [isProcessingVideo, setProcessingVideo] = useState(false);
@@ -60,6 +61,8 @@ export default function EditorView() {
     const file = event.target.files?.[0];
     const absoluteFilePath = await window.electronAPI.getFilePath(file);
     setAbsolutePath(absoluteFilePath);
+    const vidBuffer = await fileToBuffer(file);
+    setVideoBuffer(vidBuffer);
     if (file) {
       const objectURL = URL.createObjectURL(file);
       setFilePath(objectURL);
@@ -68,6 +71,16 @@ export default function EditorView() {
     } else {
       console.log('No file selected');
     }
+  };
+
+  // Convert file to buffer
+  const fileToBuffer = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(new Uint8Array(reader.result));
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
   };
 
   const onRemoveAudioClick = async () => {
@@ -166,11 +179,10 @@ export default function EditorView() {
   };
 
   const applyFfmpegCommands = async (options) => {
-    const videoBuffer = await window.ffmpegAPI.convertVideo(
-      absolutePath,
-      options,
-    );
-    const blob = new Blob([videoBuffer], { type: 'video/mp4' });
+    // const vidBuffer = await fileToBuffer(selectedFile);
+    const vidBuffer = await window.ffmpegAPI.convertVideo(videoBuffer, options);
+    setVideoBuffer(vidBuffer);
+    const blob = new Blob([vidBuffer], { type: 'video/mp4' });
     const blobUrl = URL.createObjectURL(blob);
     setFilePath(blobUrl);
     setProcessingVideo(false);

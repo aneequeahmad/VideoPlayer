@@ -137,7 +137,17 @@ app.on('window-all-closed', () => {
   }
 });
 
-ipcMain.handle('convert-video', async (_, inputPath, options) => {
+ipcMain.handle('convert-video', async (_, videoBuffer, options) => {
+   // Create temporary input file
+    const tempDir = path.join(__dirname, 'temp');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+    const inputPath = path.join(tempDir, `input_${Date.now()}.mp4`);
+    // const outputPath = path.join(tempDir, `output_${Date.now()}.${outputFormat}`);
+
+    // Write buffer to temporary file
+    await fs.writeFile(inputPath, videoBuffer);
   return new Promise((resolve, reject) => {
     try {
       const chunks: Buffer[] = [];
