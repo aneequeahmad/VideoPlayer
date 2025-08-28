@@ -1,10 +1,8 @@
 import React, { useState, useRef } from 'react';
-import '../../App.css';
 
 import VideoPlayer from './VideoPlayer';
 import DragDrop from '../../Components/DragDrop';
 import { FaArrowRotateRight } from 'react-icons/fa6';
-import { getViewManager } from '../../../Managers/ViewManager';
 import BackButton from '../../Components/BackButton';
 
 export default function EditorView() {
@@ -41,26 +39,26 @@ export default function EditorView() {
     });
   };
 
-  const handleDrop = async (event) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files?.[0];
+  // const handleDrop = async (event) => {
+  //   event.preventDefault();
+  //   const file = event.dataTransfer.files?.[0];
 
-    const absoluteFilePath = await window.ffmpegAPI.getFilePath(file);
-    setAbsolutePath(absoluteFilePath);
+  //   const absoluteFilePath = await window.ffmpegAPI.getFilePath(file);
+  //   setAbsolutePath(absoluteFilePath);
 
-    if (file) {
-      const objectURL = URL.createObjectURL(file);
-      setFilePath(objectURL);
-      setFileType(file.type);
-      // You can add further processing of the file here
-    } else {
-      console.log('No file selected');
-    }
-  };
+  //   if (file) {
+  //     const objectURL = URL.createObjectURL(file);
+  //     setFilePath(objectURL);
+  //     setFileType(file.type);
+  //     // You can add further processing of the file here
+  //   } else {
+  //     console.log('No file selected');
+  //   }
+  // };
 
   const onFileChange = async (event) => {
     const file = event.target.files?.[0];
-    const absoluteFilePath = await window.ffmpegAPI.getFilePath(file);
+    const absoluteFilePath = await window.electronAPI.getFilePath(file);
     setAbsolutePath(absoluteFilePath);
     if (file) {
       const objectURL = URL.createObjectURL(file);

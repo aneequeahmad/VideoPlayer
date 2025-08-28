@@ -8,15 +8,15 @@ export type Channels = 'ipc-example';
 contextBridge.exposeInMainWorld('ffmpegAPI', {
   convertVideo: (input: string, output: string) =>
     ipcRenderer.invoke('convert-video', input, output),
-  getFilePath: (file: any) => {
-         const path = webUtils.getPathForFile(file);
-         return path;
-  },
   removeAudio: (input: string, output: string) =>
     ipcRenderer.invoke('remove-audio', input, output), 
 });
 contextBridge.exposeInMainWorld('electronAPI', {
     // Expose a function to save audio that invokes the main process handler
+    getFilePath: (file: any) => {
+      const path = webUtils.getPathForFile(file);
+      return path;
+    },
     saveBlob: (buffer: any, filename: String) => ipcRenderer.invoke('save-blob', buffer, filename),
     getFolderContent: (folderPath: string) => ipcRenderer.invoke('get-folder-content', folderPath),
     readFileAsBlob: (filePath: string) => ipcRenderer.invoke('read-file-as-blob', filePath),

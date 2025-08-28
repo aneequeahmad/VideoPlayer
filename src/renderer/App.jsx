@@ -10,6 +10,7 @@ import EditorView from './Views/Editor/EditorView';
 import RecordingsView from './Views/Recordings/RecordingsView';
 import LoginView from './Views/Login/LoginView';
 import SettingsView from './Views/Settings/SettingsView';
+import './App.css';
 
 export default function App() {
   const [currentView, setCurrentView] = useState(null);
