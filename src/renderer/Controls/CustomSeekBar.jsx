@@ -40,10 +40,10 @@ const CustomSeekBar = ({}) => {
   const onTimeUpdate = () => {
     const playerManager = getPlayerManager();
     const currentTime = playerManager.currentTime;
-    const totalDuration = playerManager.totalDuration;
+    const duration = playerManager.totalDuration;
     //console.log('onTimeUpdate called -- ', currentTime, totalDuration);
     seekbarRef.current.value = currentTime;
-    durationRef.current.textContent = `${toHHMMSS(currentTime)} / ${toHHMMSS(totalDuration)}`;
+    durationRef.current.textContent = `${toHHMMSS(currentTime)} / ${toHHMMSS(duration)}`;
   };
   return (
     <>
@@ -67,7 +67,7 @@ const CustomSeekBar = ({}) => {
 
 const styles = {
   seekBarContainer: {
-    width: '50%',
+    width: '36%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -83,6 +83,7 @@ const styles = {
     marginLeft: '10px',
     color: 'black',
     opacity: '0.5',
+    fontSize: '12px',
   },
 };
 export default CustomSeekBar;

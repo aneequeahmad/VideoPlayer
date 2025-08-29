@@ -1,15 +1,20 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 import VideoPlayer from './VideoPlayer';
 import DragDrop from '../../Components/DragDrop';
 import { FaArrowRotateRight } from 'react-icons/fa6';
 import BackButton from '../../Components/BackButton';
+import { FolderPath } from '../../Components/FolderPath';
 
 export default function EditorView() {
   const playerRef = useRef(null);
   const [videoBuffer, setVideoBuffer] = useState(null);
   const [filePath, setFilePath] = useState('');
-  const [fileType, setFileType] = useState('');
+  const [fileType, setFileType] = useState('video/mp4');
+  const [recordingsPath, setRecordingsPath] = useState(
+    '/Users/aneequeahmad/Downloads/recordings', // Example path
+  ); // Initial path
+  const [folderContent, setFolderContent] = useState([]);
   const [isProcessingVideo, setProcessingVideo] = useState(false);
   const [absolutePath, setAbsolutePath] = useState('');
   const [brightness, setBrightness] = useState(0);
@@ -22,10 +27,14 @@ export default function EditorView() {
     sources: [
       {
         src: filePath,
-        type: fileType,
+        type: 'video/mp4',
       },
     ],
   };
+
+  useEffect(() => {
+    fetchFolderContent(recordingsPath);
+  }, [recordingsPath]);
 
   const handlePlayerReady = (player) => {
     playerRef.current = player;
@@ -68,6 +77,10 @@ export default function EditorView() {
       setFilePath(objectURL);
       setFileType(file.type);
       // You can add further processing of the file here
+      //Reset EditFilters here
+      setBrightness(0);
+      setSaturation(1.0);
+      setContrast(1.0);
     } else {
       console.log('No file selected');
     }
@@ -179,7 +192,6 @@ export default function EditorView() {
   };
 
   const applyFfmpegCommands = async (options) => {
-    // const vidBuffer = await fileToBuffer(selectedFile);
     const vidBuffer = await window.ffmpegAPI.convertVideo(videoBuffer, options);
     setVideoBuffer(vidBuffer);
     const blob = new Blob([vidBuffer], { type: 'video/mp4' });
@@ -188,142 +200,155 @@ export default function EditorView() {
     setProcessingVideo(false);
   };
 
-  return (
-    <div style={styles.editorContainer}>
-      <div style={styles.videoPlayerContainer}>
-        <VideoPlayer options={videoJsOptions} onReady={handlePlayerReady} />
-      </div>
-      <BackButton />
-      <div style={styles.importFileContainer}>
-        <DragDrop onFileChange={onFileChange} />
-      </div>
+  const fetchFolderContent = async (path, item) => {
+    if (item && item.isFile) {
+      // Handle file opening logic here
+      const fileBuffer = await window.electronAPI.readFileAsBlob(
+        `${item.path}/${item.name}`,
+      );
+      const blob = new Blob([fileBuffer]);
+      // const vidBuffer = await fileToBuffer(file);
+      setVideoBuffer(fileBuffer);
+      const objectUrl = URL.createObjectURL(blob);
+      console.log('SETTING FILE PATH >>>>', objectUrl);
+      setFilePath(objectUrl);
+      // You can use objectUrl to preview or play the file
+      //Reset EditFilters here
+      setBrightness(0);
+      setSaturation(1.0);
+      setContrast(1.0);
+    } else {
+      setRecordingsPath(path);
+      const content = await window.electronAPI.getFolderContent(path);
+      console.log('Folder content >>>>>>', content);
+      setFolderContent(content);
+    }
+  };
 
-      <div
-        style={{ ...styles.filterBtn, ...styles.rotateIcon }}
-        onClick={onRotateBtnClick}
-      >
-        <FaArrowRotateRight />
+  return (
+    <>
+      <BackButton />
+      {/* <div style={styles.importFileContainer}>
+        <DragDrop onFileChange={onFileChange} />
+      </div> */}
+      <div style={styles.editorContainer}>
+        <div style={styles.filtersContainer}>
+          <div style={styles.filterBtn} onClick={onRotateBtnClick}>
+            <FaArrowRotateRight />
+          </div>
+          <div style={styles.filterBtn} onClick={onGreyScaleBtnClick}>
+            Grey Scale
+          </div>
+          <div style={styles.filterBtn} onClick={onBlurEffectClick}>
+            Blur Effect
+          </div>
+          <div style={styles.filterBtn} onClick={onRemoveAudioClick}>
+            Remove Audio
+          </div>
+          <div style={styles.filterBtn} onClick={onSharpVideoClick}>
+            Sharp
+          </div>
+          <div style={styles.filterBtn}>
+            <label style={{ fontSize: '12px' }}>Brightness</label>
+            <input
+              style={{ width: '80px' }}
+              type="range"
+              min="-1"
+              max="1"
+              step="0.5"
+              value={brightness}
+              onChange={(e) => onBrightnessChange(parseFloat(e.target.value))}
+              disabled={isProcessingVideo || !filePath}
+            />
+          </div>
+          <div style={styles.filterBtn}>
+            <label style={{ fontSize: '12px' }}>Saturation</label>
+            <input
+              style={{ width: '80px' }}
+              type="range"
+              min="0"
+              max="3"
+              step="0.5"
+              value={saturation}
+              onChange={(e) => onSaturationChange(parseFloat(e.target.value))}
+              disabled={isProcessingVideo || !filePath}
+            />
+          </div>
+          <div style={styles.filterBtn}>
+            <label style={{ fontSize: '12px' }}>Contrast</label>
+            <input
+              style={{ width: '80px' }}
+              type="range"
+              min="0"
+              max="2"
+              step="0.5"
+              value={contrast}
+              onChange={(e) => onContrastChange(parseFloat(e.target.value))}
+              disabled={isProcessingVideo || !filePath}
+            />
+          </div>
+        </div>
+        <div style={styles.videoPlayerContainer}>
+          <VideoPlayer options={videoJsOptions} onReady={handlePlayerReady} />
+        </div>
+        <div style={styles.recordingsList}>
+          <FolderPath
+            currentPath={recordingsPath}
+            setCurrentPath={setRecordingsPath}
+          />
+          <div style={styles.folderFileList}>
+            {folderContent.map((item, index) => (
+              <div key={index}>
+                <div
+                  onClick={() =>
+                    fetchFolderContent(`${item.path}/${item.name}`, item)
+                  }
+                >
+                  {item.name}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-      <div
-        style={{ ...styles.filterBtn, ...styles.greyScaleBtn }}
-        onClick={onGreyScaleBtnClick}
-      >
-        Grey Scale
-      </div>
-      <div
-        style={{ ...styles.filterBtn, ...styles.blurEffectBtn }}
-        onClick={onBlurEffectClick}
-      >
-        Blur Effect
-      </div>
-      <div
-        style={{ ...styles.filterBtn, ...styles.removeAudioBtn }}
-        onClick={onRemoveAudioClick}
-      >
-        Remove Audio
-      </div>
-      <div
-        style={{ ...styles.filterBtn, ...styles.sharpBtn }}
-        onClick={onSharpVideoClick}
-      >
-        Sharp
-      </div>
-      <div style={{ ...styles.filterBtn, ...styles.brightnessSlider }}>
-        <label style={{ fontSize: '12px' }}>Brightness</label>
-        <input
-          style={{ width: '80px' }}
-          type="range"
-          min="-1"
-          max="1"
-          step="0.5"
-          value={brightness}
-          onChange={(e) => onBrightnessChange(parseFloat(e.target.value))}
-          disabled={isProcessingVideo || !filePath}
-        />
-      </div>
-      <div style={{ ...styles.filterBtn, ...styles.saturationSlider }}>
-        <label style={{ fontSize: '12px' }}>Saturation</label>
-        <input
-          style={{ width: '80px' }}
-          type="range"
-          min="0"
-          max="3"
-          step="0.5"
-          value={saturation}
-          onChange={(e) => onSaturationChange(parseFloat(e.target.value))}
-          disabled={isProcessingVideo || !filePath}
-        />
-      </div>
-      <div style={{ ...styles.filterBtn, ...styles.contrastSlider }}>
-        <label style={{ fontSize: '12px' }}>Contrast</label>
-        <input
-          style={{ width: '80px' }}
-          type="range"
-          min="0"
-          max="2"
-          step="0.5"
-          value={contrast}
-          onChange={(e) => onContrastChange(parseFloat(e.target.value))}
-          disabled={isProcessingVideo || !filePath}
-        />
-      </div>
-    </div>
+    </>
   );
 }
 
 const styles = {
   editorContainer: {
     display: 'flex',
-    // flexDirection: 'column',
-    // alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     marginTop: '2rem',
   },
   videoPlayerContainer: {
-    width: '600px',
-    height: '400px',
+    width: '400px',
   },
-  importFileContainer: {
-    position: 'absolute',
-    top: '4rem',
-    left: '10px',
+  // importFileContainer: {
+  //   position: 'absolute',
+  //   top: '4rem',
+  //   left: '10px',
+  // },
+  filtersContainer: {
+    marginLeft: '0.5rem',
   },
   filterBtn: {
-    position: 'absolute',
-    left: '10px',
     fontSize: '16px',
     color: 'black',
     cursor: 'pointer',
-    // width: '40px',
     backgroundColor: 'white',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
     padding: '5px',
     borderRadius: '5px',
+    marginBottom: '0.5rem',
   },
-  rotateIcon: {
-    top: '8rem',
+  recordingsList: {
+    display: 'flex',
+    flexDirection: 'column',
   },
-  greyScaleBtn: {
-    top: '12rem',
-  },
-  removeAudioBtn: {
-    top: '15rem',
-  },
-  blurEffectBtn: {
-    top: '18rem',
-  },
-  sharpBtn: {
-    top: '21rem',
-  },
-  brightnessSlider: {
-    top: '24rem',
-  },
-  saturationSlider: {
-    top: '27rem',
-  },
-  contrastSlider: {
-    top: '30rem',
+  folderFileList: {
+    width: '200px',
+    overflowY: 'auto',
+    padding: '10px',
+    height: '100vh',
   },
 };

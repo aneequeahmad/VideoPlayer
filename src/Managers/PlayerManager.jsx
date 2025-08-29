@@ -29,10 +29,13 @@ class PlayerManager extends EventManager {
     this.isPlaying = false; // Track the playing state
     this.currentTime = 0; // Track the current time
     this.volume = 0; // Track the volume level
+    this.totalDuration = 0; // Track total duration
 
     this.setIsPlaying = this.setIsPlaying.bind(this);
     this.setVolume = this.setVolume.bind(this);
     this.setCurrentTime = this.setCurrentTime.bind(this);
+    this.setTotalDuration = this.setTotalDuration.bind(this);
+    this.seekToTime = this.seekToTime.bind(this);
   }
 
   setTotalDuration(value) {

@@ -1,6 +1,7 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import VideoPlayer from '../Editor/VideoPlayer';
 import BackButton from '../../Components/BackButton';
+import { FolderPath } from '../../Components/FolderPath';
 
 export default function RecordingsView() {
   const playerRef = useRef(null);
@@ -59,11 +60,12 @@ export default function RecordingsView() {
     <>
       <BackButton />
       <div style={styles.recordingsContainer}>
-        <FolderStructure
-          currentPath={currentPath}
-          setCurrentPath={setCurrentPath}
-          setFilePath={setFilePath}
-        />
+        <div style={styles.folderPathContainer}>
+          <FolderPath
+            currentPath={currentPath}
+            setCurrentPath={setCurrentPath}
+          />
+        </div>
         <div style={styles.folderFileList}>
           {folderContent.map((item, index) => (
             <div key={index}>
@@ -87,63 +89,6 @@ export default function RecordingsView() {
   );
 }
 
-const FolderStructure = ({ currentPath, setCurrentPath, setFilePath }) => {
-  // Only show folder structure from the recordings folder
-  const recordingsRoot = '/Users/aneequeahmad/Downloads/recordings';
-  const relativePath = currentPath.replace(recordingsRoot, '');
-  console.log('Relative Path >>>>', relativePath);
-  // Split the relative path into folders
-  const folders = relativePath.split('/').filter(Boolean);
-  console.log('Folders >>>>', folders);
-
-  return (
-    <div style={{ position: 'absolute', top: 10, left: 0 }}>
-      <span>
-        <a
-          href="#"
-          style={{
-            marginRight: 5,
-            fontSize: 12,
-            textDecoration: 'underline',
-          }}
-          onClick={(e) => {
-            e.preventDefault();
-            setCurrentPath(recordingsRoot);
-            //setFilePath('');
-          }}
-        >
-          recordings
-        </a>
-        {folders.length > 0 && <span style={{ fontSize: 12 }}>/</span>}
-      </span>
-      {folders.map((folder, idx) => {
-        const pathUpTo =
-          recordingsRoot + '/' + folders.slice(0, idx + 1).join('/');
-        return (
-          <span key={pathUpTo}>
-            <a
-              href="#"
-              style={{
-                marginRight: 5,
-                fontSize: 12,
-                textDecoration: 'underline',
-              }}
-              onClick={(e) => {
-                e.preventDefault();
-                setCurrentPath(pathUpTo);
-                // setFilePath('');
-              }}
-            >
-              {folder}
-            </a>
-            {idx < folders.length - 1 && <span>/</span>}
-          </span>
-        );
-      })}
-    </div>
-  );
-};
-
 const styles = {
   recordingsContainer: {
     display: 'flex',
@@ -162,7 +107,7 @@ const styles = {
     top: '30px',
   },
   videoPlayerContainer: {
-    width: '600px',
-    height: '400px',
+    width: '400px',
   },
+  folderPathContainer: { position: 'absolute', top: 10, left: 0 },
 };

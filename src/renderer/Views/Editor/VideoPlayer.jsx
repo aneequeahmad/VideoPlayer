@@ -80,7 +80,8 @@ export const VideoPlayer = (props) => {
       dataRef.current.updateInterval = setInterval(() => {
         // console.log('Updating current time...');
         const playerManager = getPlayerManager();
-        playerManager.setCurrentTime(playerRef.current.currentTime());
+        playerRef.current &&
+          playerManager.setCurrentTime(playerRef.current.currentTime());
       }, 40);
     }
   };
