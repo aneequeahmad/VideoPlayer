@@ -5,6 +5,7 @@ import ImportFile from '../../Components/ImportFile';
 import { FaArrowRotateRight } from 'react-icons/fa6';
 import BackButton from '../../Components/BackButton';
 import { FolderPath } from '../../Components/FolderPath';
+import { getPlayerManager } from '../../../Managers/PlayerManager';
 
 export default function EditorView() {
   const playerRef = useRef(null);
@@ -214,6 +215,8 @@ export default function EditorView() {
       const fileBuffer = await window.electronAPI.readFileAsBlob(
         `${item.path}/${item.name}`,
       );
+      const playerManager = getPlayerManager();
+      playerManager.init();
       const blob = new Blob([fileBuffer]);
       // const vidBuffer = await fileToBuffer(file);
       setVideoBuffer(fileBuffer);
