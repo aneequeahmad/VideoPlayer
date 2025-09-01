@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 import VideoPlayer from './VideoPlayer';
-import DragDrop from '../../Components/DragDrop';
+import ImportFile from '../../Components/ImportFile';
 import { FaArrowRotateRight } from 'react-icons/fa6';
 import BackButton from '../../Components/BackButton';
 import { FolderPath } from '../../Components/FolderPath';
@@ -10,13 +10,13 @@ export default function EditorView() {
   const playerRef = useRef(null);
   const [videoBuffer, setVideoBuffer] = useState(null);
   const [filePath, setFilePath] = useState('');
-  const [fileType, setFileType] = useState('video/mp4');
-  const [recordingsPath, setRecordingsPath] = useState(
+  // const [fileType, setFileType] = useState('video/mp4');
+  const [folderPath, setFolderPath] = useState(
     '/Users/aneequeahmad/Downloads/recordings', // Example path
   ); // Initial path
   const [folderContent, setFolderContent] = useState([]);
   const [isProcessingVideo, setProcessingVideo] = useState(false);
-  const [absolutePath, setAbsolutePath] = useState('');
+  // const [absolutePath, setAbsolutePath] = useState('');
   const [brightness, setBrightness] = useState(0);
   const [saturation, setSaturation] = useState(1.0);
   const [contrast, setContrast] = useState(1.0);
@@ -33,8 +33,8 @@ export default function EditorView() {
   };
 
   useEffect(() => {
-    fetchFolderContent(recordingsPath);
-  }, [recordingsPath]);
+    fetchFolderContent(folderPath);
+  }, [folderPath]);
 
   const handlePlayerReady = (player) => {
     playerRef.current = player;
@@ -69,46 +69,54 @@ export default function EditorView() {
   const onFileChange = async (event) => {
     const file = event.target.files?.[0];
     const absoluteFilePath = await window.electronAPI.getFilePath(file);
-    setAbsolutePath(absoluteFilePath);
-    const vidBuffer = await fileToBuffer(file);
-    setVideoBuffer(vidBuffer);
-    if (file) {
-      const objectURL = URL.createObjectURL(file);
-      setFilePath(objectURL);
-      setFileType(file.type);
-      // You can add further processing of the file here
-      //Reset EditFilters here
-      setBrightness(0);
-      setSaturation(1.0);
-      setContrast(1.0);
-    } else {
-      console.log('No file selected');
-    }
+    //setAbsolutePath(absoluteFilePath);
+    const splitPath = absoluteFilePath.split(file.name);
+    const item = {
+      name: file.name,
+      path: splitPath[0], //Setting path without name of file in it
+      isFile: true,
+    };
+    // console.log('absoluteFilePath IS >>>', absoluteFilePath);
+    setFolderContent([...folderContent, item]);
+    // const vidBuffer = await fileToBuffer(file);
+    // setVideoBuffer(vidBuffer);
+    // if (file) {
+    //   const objectURL = URL.createObjectURL(file);
+    //   setFilePath(objectURL);
+    //   setFileType(file.type);
+    //   // You can add further processing of the file here
+    //   //Reset EditFilters here
+    //   setBrightness(0);
+    //   setSaturation(1.0);
+    //   setContrast(1.0);
+    // } else {
+    //   console.log('No file selected');
+    // }
   };
 
-  // Convert file to buffer
-  const fileToBuffer = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(new Uint8Array(reader.result));
-      reader.onerror = reject;
-      reader.readAsArrayBuffer(file);
-    });
-  };
+  // // Convert file to buffer
+  // const fileToBuffer = (file) => {
+  //   return new Promise((resolve, reject) => {
+  //     const reader = new FileReader();
+  //     reader.onload = () => resolve(new Uint8Array(reader.result));
+  //     reader.onerror = reject;
+  //     reader.readAsArrayBuffer(file);
+  //   });
+  // };
 
-  const onRemoveAudioClick = async () => {
-    const outputPath =
-      '/Users/aneequeahmad/Documents/ai-sample-videos/no-audio-video.mp4';
-    const msg = await window.ffmpegAPI.removeAudio(absolutePath, outputPath);
-    // After processing, update the video player to play the new video without audio
-    const objectURL = URL.createObjectURL(
-      new File(
-        [await window.electronAPI.readFileAsBlob(outputPath)],
-        'latest-no-audio-video.mp4',
-        { type: 'video/mp4' },
-      ),
-    );
-  };
+  // const onRemoveAudioClick = async () => {
+  //   const outputPath =
+  //     '/Users/aneequeahmad/Documents/ai-sample-videos/no-audio-video.mp4';
+  //   const msg = await window.ffmpegAPI.removeAudio(absolutePath, outputPath);
+  //   // After processing, update the video player to play the new video without audio
+  //   const objectURL = URL.createObjectURL(
+  //     new File(
+  //       [await window.electronAPI.readFileAsBlob(outputPath)],
+  //       'latest-no-audio-video.mp4',
+  //       { type: 'video/mp4' },
+  //     ),
+  //   );
+  // };
 
   const onRotateBtnClick = async () => {
     const options = {
@@ -200,7 +208,7 @@ export default function EditorView() {
     setProcessingVideo(false);
   };
 
-  const fetchFolderContent = async (path, item) => {
+  const onItemClick = async (path, item) => {
     if (item && item.isFile) {
       // Handle file opening logic here
       const fileBuffer = await window.electronAPI.readFileAsBlob(
@@ -218,19 +226,19 @@ export default function EditorView() {
       setSaturation(1.0);
       setContrast(1.0);
     } else {
-      setRecordingsPath(path);
-      const content = await window.electronAPI.getFolderContent(path);
-      console.log('Folder content >>>>>>', content);
-      setFolderContent(content);
+      fetchFolderContent(path);
     }
+  };
+
+  const fetchFolderContent = async (path) => {
+    setFolderPath(path);
+    const content = await window.electronAPI.getFolderContent(path);
+    setFolderContent(content);
   };
 
   return (
     <>
       <BackButton />
-      {/* <div style={styles.importFileContainer}>
-        <DragDrop onFileChange={onFileChange} />
-      </div> */}
       <div style={styles.editorContainer}>
         <div style={styles.filtersContainer}>
           <div style={styles.filterBtn} onClick={onRotateBtnClick}>
@@ -242,9 +250,9 @@ export default function EditorView() {
           <div style={styles.filterBtn} onClick={onBlurEffectClick}>
             Blur Effect
           </div>
-          <div style={styles.filterBtn} onClick={onRemoveAudioClick}>
+          {/* <div style={styles.filterBtn} onClick={onRemoveAudioClick}>
             Remove Audio
-          </div>
+          </div> */}
           <div style={styles.filterBtn} onClick={onSharpVideoClick}>
             Sharp
           </div>
@@ -292,22 +300,21 @@ export default function EditorView() {
           <VideoPlayer options={videoJsOptions} onReady={handlePlayerReady} />
         </div>
         <div style={styles.recordingsList}>
-          <FolderPath
-            currentPath={recordingsPath}
-            setCurrentPath={setRecordingsPath}
-          />
+          <FolderPath currentPath={folderPath} setCurrentPath={setFolderPath} />
           <div style={styles.folderFileList}>
             {folderContent.map((item, index) => (
               <div key={index}>
                 <div
-                  onClick={() =>
-                    fetchFolderContent(`${item.path}/${item.name}`, item)
-                  }
+                  style={styles.item}
+                  onClick={() => onItemClick(`${item.path}/${item.name}`, item)}
                 >
                   {item.name}
                 </div>
               </div>
             ))}
+          </div>
+          <div style={styles.importFileContainer}>
+            <ImportFile onFileChange={onFileChange} />
           </div>
         </div>
       </div>
@@ -324,11 +331,11 @@ const styles = {
   videoPlayerContainer: {
     width: '400px',
   },
-  // importFileContainer: {
-  //   position: 'absolute',
-  //   top: '4rem',
-  //   left: '10px',
-  // },
+  importFileContainer: {
+    position: 'absolute',
+    top: '3.7rem',
+    right: '10px',
+  },
   filtersContainer: {
     marginLeft: '0.5rem',
   },
@@ -350,5 +357,12 @@ const styles = {
     overflowY: 'auto',
     padding: '10px',
     height: '100vh',
+  },
+  item: {
+    cursor: 'pointer',
+    marginBottom: '0.25rem',
+    backgroundColor: 'white',
+    padding: '4px',
+    borderRadius: '5px',
   },
 };
