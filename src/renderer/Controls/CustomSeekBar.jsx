@@ -67,7 +67,7 @@ const CustomSeekBar = ({}) => {
 
 const styles = {
   seekBarContainer: {
-    width: '36%',
+    width: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

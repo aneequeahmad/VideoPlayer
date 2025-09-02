@@ -9,7 +9,7 @@ export const FolderPath = ({ currentPath, setCurrentPath }) => {
   const folders = relativePath.split('/').filter(Boolean);
 
   return (
-    <div>
+    <div style={styles.folderPathContainer}>
       <span>
         <a
           href="#"
@@ -53,4 +53,10 @@ export const FolderPath = ({ currentPath, setCurrentPath }) => {
       })}
     </div>
   );
+};
+
+const styles = {
+  folderPathContainer: {
+    marginBottom: '10px',
+  },
 };

@@ -73,7 +73,7 @@ const styles = {
     width: '20%',
   },
   volumeSlider: {
-    width: '50px',
+    width: '80px',
     marginLeft: '10px',
   },
 };
