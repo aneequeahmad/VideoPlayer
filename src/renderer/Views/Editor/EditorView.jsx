@@ -11,6 +11,7 @@ export default function EditorView() {
   const playerRef = useRef(null);
   const [videoBuffer, setVideoBuffer] = useState(null);
   const [filePath, setFilePath] = useState('');
+  const [videoObjects, setVideoObjects] = useState([]);
   // const [fileType, setFileType] = useState('video/mp4');
   const [folderPath, setFolderPath] = useState(
     '/Users/aneequeahmad/Downloads/recordings', // Example path
@@ -218,17 +219,45 @@ export default function EditorView() {
       const playerManager = getPlayerManager();
       playerManager.init();
       // Handle file opening logic here
-      setAbsolutePath(path);
-      const fileBuffer = await window.electronAPI.readFileAsBlob(
-        `${item.path}/${item.name}`,
-      );
+      //setAbsolutePath(path);
+      //
+
+      // const preview = await window.ffmpegAPI.generatePreview(path);
+      // const allPreviews = [...videoPreviews, preview];
+      // setVideoPreviews(allPreviews);
+      //
+
+      const fileBuffer = await window.electronAPI.readFileAsBlob(path);
       const blob = new Blob([fileBuffer]);
-      // const vidBuffer = await fileToBuffer(file);
-      //setVideoBuffer(fileBuffer);
-      const objectUrl = URL.createObjectURL(blob);
-      console.log('SETTING FILE PATH >>>>', objectUrl);
-      setFilePath(objectUrl);
-      // You can use objectUrl to preview or play the file
+      const videoUrl = URL.createObjectURL(blob);
+      console.log('SETTING FILE PATH >>>>', videoUrl);
+      //setFilePath(objectUrl);
+
+      const result = await window.ffmpegAPI.generateThumbnail({
+        videoBuffer: fileBuffer,
+        timeInSeconds: 0,
+        width: 320,
+        height: 240,
+        quality: 2,
+      });
+
+      if (result.success) {
+        const blob = new Blob([result.thumbnail], { type: 'image/jpeg' });
+        const previewUrl = URL.createObjectURL(blob);
+        const videoObj = {
+          videoUrl: videoUrl,
+          previewUrl: previewUrl,
+          path: path,
+        };
+        console.log('THUMBNAIL URL **********', videoObj);
+        const allVideoObj = [...videoObjects, videoObj];
+        console.log('ALL THUMBNAILS **********', allVideoObj);
+        setVideoObjects(allVideoObj);
+        //setCurrentThumbnail({ url, timestamp: timeInSeconds });
+      } else {
+        //setError(`Thumbnail generation failed: ${result.error}`);
+      }
+
       //Reset EditFilters here
       setBrightness(0);
       setSaturation(1.0);
@@ -243,6 +272,12 @@ export default function EditorView() {
     const content = await window.electronAPI.getFolderContent(path);
     setFolderContent(content);
   };
+
+  const onVideoPreviewClick = (videoObj) => {
+    setFilePath(videoObj.videoUrl);
+    setAbsolutePath(videoObj.path);
+  };
+  const videoObjArray = videoObjects.slice(-3);
 
   return (
     <>
@@ -332,6 +367,16 @@ export default function EditorView() {
         <div style={styles.videoPlayerContainer}>
           <VideoPlayer options={videoJsOptions} onReady={handlePlayerReady} />
         </div>
+        <div style={styles.layoutsContainer}>
+          {videoObjArray.map((videoObj) => (
+            <div
+              style={styles.layoutContainer}
+              onClick={() => onVideoPreviewClick(videoObj)}
+            >
+              <img style={styles.layoutContainer} src={videoObj.previewUrl} />
+            </div>
+          ))}
+        </div>
       </div>
     </>
   );
@@ -340,6 +385,7 @@ export default function EditorView() {
 const styles = {
   editorContainer: {
     display: 'flex',
+    justifyContent: 'space-between',
     marginTop: '2rem',
   },
   videoPlayerContainer: {
@@ -381,5 +427,16 @@ const styles = {
     backgroundColor: 'white',
     padding: '4px',
     borderRadius: '5px',
+  },
+  layoutsContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+  },
+  layoutContainer: {
+    width: '200px',
+    height: '150px',
+    borderRadius: '5px',
+    marginRight: '1rem',
   },
 };

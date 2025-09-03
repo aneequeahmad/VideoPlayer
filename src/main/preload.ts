@@ -9,7 +9,9 @@ contextBridge.exposeInMainWorld('ffmpegAPI', {
   convertVideo: (input: string, output: string) =>
     ipcRenderer.invoke('convert-video', input, output),
   removeAudio: (input: string, output: string) =>
-    ipcRenderer.invoke('remove-audio', input, output), 
+    ipcRenderer.invoke('remove-audio', input, output),
+  generateThumbnail: (options) => 
+    ipcRenderer.invoke('generate-thumbnail', options),
 });
 contextBridge.exposeInMainWorld('electronAPI', {
     // Expose a function to save audio that invokes the main process handler

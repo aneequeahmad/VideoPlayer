@@ -195,6 +195,68 @@ ipcMain.handle('remove-audio', async (_, inputPath, output) => {
   });
 });
 
+// Generate single thumbnail
+ipcMain.handle('generate-thumbnail', async (event, options) => {
+  const { 
+    videoBuffer, 
+    timeInSeconds = 5, 
+    width = 320, 
+    height = 240,
+    quality = 2  // 1-31, lower is better quality
+  } = options;
+
+  try {
+    const tempDir = path.join(__dirname, 'temp');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+    
+    const inputPath = path.join(tempDir, `input_${Date.now()}.mp4`);
+    const outputPath = path.join(tempDir, `thumb_${Date.now()}.jpg`);
+
+    await fs.writeFile(inputPath, videoBuffer);
+
+    return new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+        .seekInput(timeInSeconds)
+        .frames(1)
+        .size(`${width}x${height}`)
+        .outputOptions([`-q:v ${quality}`])
+        .output(outputPath)
+        .on('end', async () => {
+          try {
+            const thumbnailBuffer = await fs.readFile(outputPath);
+            
+            await fs.unlink(inputPath);
+            await fs.unlink(outputPath);
+            
+            resolve({
+              success: true,
+              thumbnail: thumbnailBuffer,
+              timestamp: timeInSeconds
+            });
+          } catch (error) {
+            reject({ success: false, error: error.message });
+          }
+        })
+        .on('error', async (error) => {
+          try {
+            if (fs.existsSync(inputPath)) await fs.unlink(inputPath);
+            if (fs.existsSync(outputPath)) await fs.unlink(outputPath);
+          } catch (cleanupError) {
+            console.error('Cleanup error:', cleanupError);
+          }
+          
+          reject({ success: false, error: error.message });
+        })
+        .run();
+    });
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+
 // Handle the 'save-blob' request from the renderer
   ipcMain.handle('save-blob', async (event, buffer, filename) => {
       try {
