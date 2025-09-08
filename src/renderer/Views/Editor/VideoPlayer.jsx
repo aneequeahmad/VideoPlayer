@@ -10,11 +10,10 @@ import {
 } from '../../../Managers/PlayerManager';
 import { ButtonControls } from '../../Controls/ButtonControls';
 
-export const VideoPlayer = (props) => {
+export const VideoPlayer = ({ options, onReady, src }) => {
   const videoRef = useRef(null);
   const playerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const { options, onReady } = props;
 
   const dataRef = useRef({});
 
@@ -41,6 +40,16 @@ export const VideoPlayer = (props) => {
       videoElement.classList.add('vjs-big-play-centered');
       videoRef.current.appendChild(videoElement);
 
+      const options = {
+        responsive: true,
+        fluid: true,
+        sources: [
+          {
+            src,
+            type: 'video/mp4',
+          },
+        ],
+      };
       const player = videojs(videoElement, options, () => {
         videojs.log('player is ready');
         onReady && onReady(player);
@@ -50,12 +59,9 @@ export const VideoPlayer = (props) => {
       // You could update an existing player in the `else` block here
       // on prop change, for example:
     } else {
-      const player = playerRef.current;
-
-      player.autoplay(options.autoplay);
-      player.src(options.sources);
+      playerRef.current.src(src);
     }
-  }, [options, videoRef]);
+  }, [src, videoRef]);
 
   const onLoaded = () => {
     const playerManager = getPlayerManager();
@@ -64,7 +70,6 @@ export const VideoPlayer = (props) => {
   // Dispose the Video.js player when the functional component unmounts
   useEffect(() => {
     const player = playerRef.current;
-
     return () => {
       if (player && !player.isDisposed()) {
         player.dispose();
@@ -105,12 +110,9 @@ export const VideoPlayer = (props) => {
   };
 
   return (
-    <div data-vjs-player>
-      <div ref={videoRef} style={{ position: 'relative' }}>
-        <div style={styles.controlsContainer}>
-          <ButtonControls />
-          {playerRef.current && <CustomSeekBar />}
-        </div>
+    <div style={{ width: '300px' }}>
+      <div data-vjs-player>
+        <div ref={videoRef}></div>
       </div>
     </div>
   );
@@ -119,16 +121,16 @@ export const VideoPlayer = (props) => {
 export default VideoPlayer;
 
 const styles = {
-  controlsContainer: {
-    position: 'absolute',
-    display: 'flex',
-    zIndex: '100',
-    height: '2rem',
-    bottom: '0',
-    width: '100%',
-    backgroundColor: 'white',
-    display: 'flex',
-    alignItems: 'center',
-    width: '100%',
-  },
+  // controlsContainer: {
+  //   position: 'absolute',
+  //   display: 'flex',
+  //   zIndex: '100',
+  //   height: '2rem',
+  //   bottom: '0',
+  //   width: '100%',
+  //   backgroundColor: 'white',
+  //   display: 'flex',
+  //   alignItems: 'center',
+  //   width: '100%',
+  // },
 };

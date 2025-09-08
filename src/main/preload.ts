@@ -8,6 +8,8 @@ export type Channels = 'ipc-example';
 contextBridge.exposeInMainWorld('ffmpegAPI', {
   convertVideo: (input: string, output: string) =>
     ipcRenderer.invoke('convert-video', input, output),
+  processFrame: (videoPath: string, timestamp: any, width: any, height: any, filter: any) =>
+    ipcRenderer.invoke('process-frame', videoPath, timestamp, width, height, filter),
   removeAudio: (input: string, output: string) =>
     ipcRenderer.invoke('remove-audio', input, output),
   generateThumbnail: (options) => 

@@ -20,6 +20,8 @@ export const PLAYER_MANAGER_EVENTS = {
   TIME_UPDATE: 'timeUpdate',
   DURATION_UPDATE: 'timeUpdate',
   SEEK: 'seek',
+  VIDEOS_CHANGED: 'videosChanged',
+  AUDIOS_CHANGED: 'audiosChanged',
 };
 
 class PlayerManager extends EventManager {
@@ -39,12 +41,37 @@ class PlayerManager extends EventManager {
     this.currentTime = 0; // Track the current time
     this.volume = 0; // Track the volume level
     this.totalDuration = 0; // Track total duration
+
+    this.videos = [];
+    this.audios = [];
+  }
+  addVideo(url) {
+    this.videos.push(url);
+    this.trigger(PLAYER_MANAGER_EVENTS.VIDEOS_CHANGED);
+  }
+  removeVideo(url) {
+    let index = this.videos.findIndex(url);
+    this.videos.splice(index, 1);
+    this.trigger(PLAYER_MANAGER_EVENTS.VIDEOS_CHANGED);
+  }
+
+  addAudio(url) {
+    this.audios.push(url);
+    this.trigger(PLAYER_MANAGER_EVENTS.AUDIOS_CHANGED);
+  }
+  removeAudio(url) {
+    let index = this.audios.findIndex(url);
+    this.audios.splice(index, 1);
+    this.trigger(PLAYER_MANAGER_EVENTS.AUDIOS_CHANGED);
   }
 
   setTotalDuration(value) {
-    this.totalDuration = value;
-    this.trigger(PLAYER_MANAGER_EVENTS.DURATION_UPDATE);
+    if (Number.isFinite(value)) {
+      this.totalDuration = value;
+      this.trigger(PLAYER_MANAGER_EVENTS.DURATION_UPDATE);
+    }
   }
+
   setIsPlaying(value) {
     this.isPlaying = value;
     if (value) {

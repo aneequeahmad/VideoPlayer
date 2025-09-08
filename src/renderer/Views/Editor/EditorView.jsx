@@ -6,50 +6,41 @@ import { FaArrowRotateRight } from 'react-icons/fa6';
 import BackButton from '../../Components/BackButton';
 import { FolderPath } from '../../Components/FolderPath';
 import { getPlayerManager } from '../../../Managers/PlayerManager';
+import PlayersView from './PlayersView';
 
 export default function EditorView() {
   const playerRef = useRef(null);
-  const [videoBuffer, setVideoBuffer] = useState(null);
+  // const [videoBuffer, setVideoBuffer] = useState(null);
   const [filePath, setFilePath] = useState('');
   const [videoObjects, setVideoObjects] = useState([]);
+  // const [processedFrame, setProcessedFrame] = useState(null);
   // const [fileType, setFileType] = useState('video/mp4');
   const [folderPath, setFolderPath] = useState(
     '/Users/aneequeahmad/Downloads/recordings', // Example path
   ); // Initial path
   const [folderContent, setFolderContent] = useState([]);
-  const [isProcessingVideo, setProcessingVideo] = useState(false);
+  // const [isProcessingVideo, setProcessingVideo] = useState(false);
   const [absolutePath, setAbsolutePath] = useState('');
   const [brightness, setBrightness] = useState(0);
   const [saturation, setSaturation] = useState(1.0);
   const [contrast, setContrast] = useState(1.0);
 
-  const videoJsOptions = {
-    responsive: true,
-    fluid: true,
-    sources: [
-      {
-        src: filePath,
-        type: 'video/mp4',
-      },
-    ],
-  };
-
   useEffect(() => {
     fetchFolderContent(folderPath);
   }, [folderPath]);
 
-  const handlePlayerReady = (player) => {
-    playerRef.current = player;
+  // const handlePlayerReady = (player) => {
+  //   playerRef.current = player;
 
-    // You can handle player events here, for example:
-    player.on('waiting', () => {
-      videojs.log('player is waiting');
-    });
+  //   // You can handle player events here, for example:
+  //   player.on('waiting', () => {
+  //     videojs.log('player is waiting');
+  //   });
 
-    player.on('dispose', () => {
-      videojs.log('player will dispose');
-    });
-  };
+  //   player.on('dispose', () => {
+  //     videojs.log('player will dispose');
+  //   });
+  // };
 
   // const handleDrop = async (event) => {
   //   event.preventDefault();
@@ -150,56 +141,71 @@ export default function EditorView() {
   };
   const onBrightnessChange = async (value) => {
     setBrightness(value);
-    setProcessingVideo(true);
-    const options = {
-      outputOptions: [
-        '-filter_complex',
-        `[0:v]eq=brightness=${value}[v]`,
-        '-map',
-        '[v]',
-        '-map',
-        '0:a?', // include audio if exists
-        '-c:a',
-        'copy', // copy audio without re-encoding
-      ],
-    };
-    applyFfmpegCommands(options);
+    //setProcessingVideo(true);
+    // const options = {
+    //   outputOptions: [
+    //     '-filter_complex',
+    //     `[0:v]eq=brightness=${value}[v]`,
+    //     '-map',
+    //     '[v]',
+    //     '-map',
+    //     '0:a?', // include audio if exists
+    //     '-c:a',
+    //     'copy', // copy audio without re-encoding
+    //   ],
+    // };
+    //applyFfmpegCommands(options);
+    applyFfmpegCommandonCurrentFrame('all', {
+      brightness: value,
+      contrast: contrast,
+      saturation: saturation,
+    });
   };
 
   const onSaturationChange = (value) => {
     setSaturation(value);
-    setProcessingVideo(true);
-    const options = {
-      outputOptions: [
-        '-filter_complex',
-        `[0:v]eq=saturation=${value}[v]`,
-        '-map',
-        '[v]',
-        '-map',
-        '0:a?', // include audio if exists
-        '-c:a',
-        'copy', // copy audio without re-encoding
-      ],
-    };
-    applyFfmpegCommands(options);
+    //setProcessingVideo(true);
+    // const options = {
+    //   outputOptions: [
+    //     '-filter_complex',
+    //     `[0:v]eq=saturation=${value}[v]`,
+    //     '-map',
+    //     '[v]',
+    //     '-map',
+    //     '0:a?', // include audio if exists
+    //     '-c:a',
+    //     'copy', // copy audio without re-encoding
+    //   ],
+    // };
+    //applyFfmpegCommands(options);
+    applyFfmpegCommandonCurrentFrame('all', {
+      brightness: brightness,
+      contrast: contrast,
+      saturation: value,
+    });
   };
 
   const onContrastChange = (value) => {
     setContrast(value);
-    setProcessingVideo(true);
-    const options = {
-      outputOptions: [
-        '-filter_complex',
-        `[0:v]eq=contrast=${value}[v]`,
-        '-map',
-        '[v]',
-        '-map',
-        '0:a?', // include audio if exists
-        '-c:a',
-        'copy', // copy audio without re-encoding
-      ],
-    };
-    applyFfmpegCommands(options);
+    // setProcessingVideo(true);
+    // const options = {
+    //   outputOptions: [
+    //     '-filter_complex',
+    //     `[0:v]eq=contrast=${value}[v]`,
+    //     '-map',
+    //     '[v]',
+    //     '-map',
+    //     '0:a?', // include audio if exists
+    //     '-c:a',
+    //     'copy', // copy audio without re-encoding
+    //   ],
+    // };
+    //applyFfmpegCommands(options);
+    applyFfmpegCommandonCurrentFrame('all', {
+      brightness: brightness,
+      contrast: value,
+      saturation: saturation,
+    });
   };
 
   const applyFfmpegCommands = async (options) => {
@@ -211,7 +217,52 @@ export default function EditorView() {
     const blob = new Blob([vidBuffer], { type: 'video/mp4' });
     const blobUrl = URL.createObjectURL(blob);
     setFilePath(blobUrl);
-    setProcessingVideo(false);
+    if (playerRef.current) {
+      const videoElement = playerRef.current.el();
+      const overlay = videoElement.querySelector('.frame-overlay');
+      if (overlay) {
+        overlay.remove();
+      }
+    }
+    // setProcessingVideo(false);
+  };
+
+  const applyFfmpegCommandonCurrentFrame = async (effect, parameters) => {
+    const playerManager = getPlayerManager();
+    const currentTime = playerManager.currentTime;
+    // Process frame using FFmpeg through Electron API
+
+    const result = await window.ffmpegAPI.processFrame({
+      inputPath: absolutePath,
+      currentTime: currentTime,
+      effect: effect,
+      parameters: parameters,
+    });
+    if (result.success) {
+      const blob = new Blob([result.frameBuffer], { type: 'image/jpeg' });
+      const url = URL.createObjectURL(blob);
+      // Show overlay on VideoPlayer
+      if (playerRef.current) {
+        const videoElement = playerRef.current.el();
+        let overlay = videoElement.querySelector('.frame-overlay');
+        if (!overlay) {
+          overlay = document.createElement('img');
+          overlay.className = 'frame-overlay';
+          overlay.style.position = 'absolute';
+          overlay.style.top = '0';
+          overlay.style.left = '0';
+          overlay.style.width = '100%';
+          overlay.style.height = '100%';
+          overlay.style.pointerEvents = 'none';
+          videoElement.appendChild(overlay);
+          videoElement.style.position = 'relative';
+        }
+        overlay.src = url;
+      }
+      // setProcessingVideo(false);
+      //setProcessedFrame(url);
+      //drawOverlay(url);
+    }
   };
 
   const onItemClick = async (path, item) => {
@@ -219,19 +270,9 @@ export default function EditorView() {
       const playerManager = getPlayerManager();
       playerManager.init();
       // Handle file opening logic here
-      //setAbsolutePath(path);
-      //
-
-      // const preview = await window.ffmpegAPI.generatePreview(path);
-      // const allPreviews = [...videoPreviews, preview];
-      // setVideoPreviews(allPreviews);
-      //
-
       const fileBuffer = await window.electronAPI.readFileAsBlob(path);
       const blob = new Blob([fileBuffer]);
       const videoUrl = URL.createObjectURL(blob);
-      console.log('SETTING FILE PATH >>>>', videoUrl);
-      //setFilePath(objectUrl);
 
       const result = await window.ffmpegAPI.generateThumbnail({
         videoBuffer: fileBuffer,
@@ -249,13 +290,11 @@ export default function EditorView() {
           previewUrl: previewUrl,
           path: path,
         };
-        console.log('THUMBNAIL URL **********', videoObj);
-        const allVideoObj = [...videoObjects, videoObj];
-        console.log('ALL THUMBNAILS **********', allVideoObj);
-        setVideoObjects(allVideoObj);
-        //setCurrentThumbnail({ url, timestamp: timeInSeconds });
+        let allVideoObjArray = [...videoObjects, videoObj];
+        allVideoObjArray = allVideoObjArray.slice(-2);
+        setVideoObjects(allVideoObjArray);
       } else {
-        //setError(`Thumbnail generation failed: ${result.error}`);
+        //Thumbnail generation failed
       }
 
       //Reset EditFilters here
@@ -276,8 +315,35 @@ export default function EditorView() {
   const onVideoPreviewClick = (videoObj) => {
     setFilePath(videoObj.videoUrl);
     setAbsolutePath(videoObj.path);
+    const playerManager = getPlayerManager();
+    playerManager.init();
+    if (playerRef.current) {
+      const videoElement = playerRef.current.el();
+      const overlay = videoElement.querySelector('.frame-overlay');
+      if (overlay) {
+        overlay.remove();
+      }
+    }
   };
-  const videoObjArray = videoObjects.slice(-3);
+
+  const onApplyBtnClick = () => {
+    const options = {
+      outputOptions: [
+        '-filter_complex',
+        `[0:v]eq=brightness=${brightness}:contrast=${contrast}:saturation=${saturation}[v]`,
+        '-map',
+        '[v]',
+        '-map',
+        '0:a?', // include audio if exists
+        '-c:a',
+        'copy', // copy audio without re-encoding
+      ],
+    };
+    applyFfmpegCommands(options);
+    // const playerManager = getPlayerManager();
+    // playerManager.init();
+  };
+  const videoObjArray = videoObjects.slice(-2);
 
   return (
     <>
@@ -330,10 +396,9 @@ export default function EditorView() {
                 type="range"
                 min="-1"
                 max="1"
-                step="0.5"
+                step="0.08"
                 value={brightness}
                 onChange={(e) => onBrightnessChange(parseFloat(e.target.value))}
-                disabled={isProcessingVideo}
               />
             </div>
             <div style={styles.filterBtn}>
@@ -343,10 +408,10 @@ export default function EditorView() {
                 type="range"
                 min="0"
                 max="3"
-                step="0.5"
+                step="0.1"
                 value={saturation}
                 onChange={(e) => onSaturationChange(parseFloat(e.target.value))}
-                disabled={isProcessingVideo}
+                //disabled={isProcessingVideo}
               />
             </div>
             <div style={styles.filterBtn}>
@@ -356,17 +421,25 @@ export default function EditorView() {
                 type="range"
                 min="0"
                 max="2"
-                step="0.5"
+                step="0.1"
                 value={contrast}
                 onChange={(e) => onContrastChange(parseFloat(e.target.value))}
-                disabled={isProcessingVideo}
+                //disabled={isProcessingVideo}
               />
+            </div>
+            <div style={styles.applyBtn} onClick={onApplyBtnClick}>
+              <div>Apply</div>
             </div>
           </div>
         </div>
-        <div style={styles.videoPlayerContainer}>
-          <VideoPlayer options={videoJsOptions} onReady={handlePlayerReady} />
-        </div>
+        <PlayersView videos={videoObjArray} />
+        {/* <div style={styles.videoPlayerContainer}>
+          <VideoPlayer
+            src={filePath}
+            options={videoJsOptions}
+            onReady={handlePlayerReady}
+          />
+        </div> */}
         <div style={styles.layoutsContainer}>
           {videoObjArray.map((videoObj) => (
             <div
@@ -387,10 +460,6 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     marginTop: '2rem',
-  },
-  videoPlayerContainer: {
-    width: '600px',
-    marginLeft: '2rem',
   },
   importFileContainer: {
     position: 'absolute',
@@ -431,12 +500,21 @@ const styles = {
   layoutsContainer: {
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between',
   },
   layoutContainer: {
     width: '200px',
     height: '150px',
     borderRadius: '5px',
     marginRight: '1rem',
+    marginBottom: '1rem',
+  },
+  applyBtn: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '10px',
+    backgroundColor: 'white',
+    borderRadius: '5px',
+    cursor: 'pointer',
   },
 };

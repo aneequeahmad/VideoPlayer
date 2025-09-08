@@ -16,6 +16,7 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 const ffmpegPath = require('ffmpeg-static');
 import fs from 'fs-extra'
+import { buildVideoFilter } from '../Utils';
 
 // Disable no-unused-vars, broken for spread args
 const ffmpeg = require('fluent-ffmpeg');
@@ -200,8 +201,8 @@ ipcMain.handle('generate-thumbnail', async (event, options) => {
   const { 
     videoBuffer, 
     timeInSeconds = 5, 
-    width = 320, 
-    height = 240,
+    width = 200, 
+    height = 150,
     quality = 2  // 1-31, lower is better quality
   } = options;
 
@@ -242,6 +243,73 @@ ipcMain.handle('generate-thumbnail', async (event, options) => {
         .on('error', async (error) => {
           try {
             if (fs.existsSync(inputPath)) await fs.unlink(inputPath);
+            if (fs.existsSync(outputPath)) await fs.unlink(outputPath);
+          } catch (cleanupError) {
+            console.error('Cleanup error:', cleanupError);
+          }
+          
+          reject({ success: false, error: error.message });
+        })
+        .run();
+    });
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+
+// Extract and process current frame
+ipcMain.handle('process-frame', async (event, options) => {
+  const { 
+    inputPath, 
+    currentTime, 
+    effect = 'brightness',
+    parameters = {} 
+  } = options;
+
+  try {
+    const tempDir = path.join(__dirname, 'temp');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+    
+    // const inputPath = path.join(tempDir, `input_${Date.now()}.mp4`);
+    const outputPath = path.join(tempDir, `frame_${Date.now()}.jpg`);
+
+    //await fs.writeFile(inputPath, videoBuffer);
+
+    return new Promise((resolve, reject) => {
+      // Build filter based on effect and parameters
+      let videoFilter = buildVideoFilter(effect, parameters);
+      console.log("************ VIDEO FILTER IN PROCESS FRAME **************", videoFilter);
+      ffmpeg(inputPath)
+        .seekInput(currentTime)
+        .frames(1)
+        .videoFilters(videoFilter)
+        .size('640x480') // Fixed size for overlay
+        .outputOptions(['-q:v 2']) // High quality
+        .output(outputPath)
+        .on('end', async () => {
+          try {
+            const frameBuffer = await fs.readFile(outputPath);
+            
+           // await fs.unlink(inputPath);
+            await fs.unlink(outputPath);
+            
+            resolve({
+              success: true,
+              frameBuffer: frameBuffer,
+              timestamp: currentTime,
+              effect: effect,
+              parameters: parameters
+            });
+          } catch (error) {
+            reject({ success: false, error: error.message });
+          }
+        })
+        .on('error', async (error) => {
+          try {
+            //if (fs.existsSync(inputPath)) await fs.unlink(inputPath);
             if (fs.existsSync(outputPath)) await fs.unlink(outputPath);
           } catch (cleanupError) {
             console.error('Cleanup error:', cleanupError);
