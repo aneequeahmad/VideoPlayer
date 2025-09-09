@@ -110,7 +110,7 @@ export const VideoPlayer = ({ options, onReady, src }) => {
   };
 
   return (
-    <div style={{ width: '300px' }}>
+    <div style={{ width: '100%' }}>
       <div data-vjs-player>
         <div ref={videoRef}></div>
       </div>

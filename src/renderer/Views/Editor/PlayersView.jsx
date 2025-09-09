@@ -1,7 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import 'video.js/dist/video-js.css';
-// import { FaPlay, FaPause, FaVolumeUp } from 'react-icons/fa';
-// import { MdFullscreen } from "react-icons/md";
 import CustomSeekBar from '../../Controls/CustomSeekBar';
 import {
   getPlayerManager,
@@ -12,53 +10,71 @@ import VideoPlayer from './VideoPlayer';
 
 export const PlayersView = ({ videos }) => {
   const [playingVideos, setPlayingVideos] = useState([]);
-  const prevVideosRef = useRef([]);
+  // const prevVideosRef = useRef([]);
+  const playerManagerRef = useRef(null);
+
   useEffect(() => {
     const playerManager = getPlayerManager();
+    playerManagerRef.current = playerManager;
+
     playerManager.on(PLAYER_MANAGER_EVENTS.VIDEOS_CHANGED, onVideosUpdated);
 
-    if (videos) {
-      const prevVideos = prevVideosRef.current;
-      //const prevVideos = playerManager.videos;
-
-      // Find videos that are new compared to last render
-      const newVideos = videos.filter(
-        (video) => !prevVideos.some((v) => v.videoUrl === video.videoUrl),
-      );
-      console.log('NEW VIDEOS ARE >>>>', newVideos);
-      newVideos.forEach((video) => {
-        playerManager.addVideo(video.videoUrl);
-      });
-
-      // Update ref so we know what was added last time
-      prevVideosRef.current = videos;
-    }
+    // Initial sync
+    onVideosUpdated();
 
     return () => {
       playerManager.off(PLAYER_MANAGER_EVENTS.VIDEOS_CHANGED, onVideosUpdated);
     };
-  }, [videos]);
+  }, []);
+
+  useEffect(() => {
+    if (!videos || !playerManagerRef.current) return;
+
+    const playerManager = playerManagerRef.current;
+
+    // Find videos to add (new in current props, not in manager)
+    const videosToAdd = videos.filter(
+      (video) => !playerManager.videos.includes(video.videoUrl),
+    );
+
+    // Find videos to remove (in manager but not in current props)
+    const videosToRemove = playerManager.videos.filter(
+      (videoUrl) => !videos.some((video) => video.videoUrl === videoUrl),
+    );
+
+    // Add new videos
+    videosToAdd.forEach((video) => {
+      playerManager.addVideo(video.videoUrl);
+    });
+
+    // Update ref for next comparison
+    // prevVideosRef.current = videos;
+  }, [videos]); // This effect runs whenever videos prop changes
 
   const onVideosUpdated = () => {
-    let playerManager = getPlayerManager();
-    console.log('VIDEOS IN PLAYER MANAGEr >>>>>', playerManager.videos);
-    setPlayingVideos(playerManager.videos);
+    const playerManager = playerManagerRef.current;
+    if (playerManager) {
+      setPlayingVideos([...playerManager.videos]); // Create new array to trigger re-render
+    }
   };
 
   return (
-    <div style={styles.playerViewContainer}>
-      <div style={{ display: 'flex' }}>
-        {playingVideos &&
-          playingVideos.map((video) => {
-            return <VideoPlayer src={video} />;
-          })}
-      </div>
+    <>
+      <div style={styles.playerViewContainer}>
+        <div style={{ display: 'flex' }}>
+          {playingVideos &&
+            playingVideos.map((videoUrl) => {
+              return <VideoPlayer key={videoUrl} src={videoUrl} />;
+            })}
+        </div>
 
-      <div style={styles.controlsContainer}>
-        <ButtonControls />
-        <CustomSeekBar />
+        <div style={styles.controlsContainer}>
+          <ButtonControls />
+          <CustomSeekBar />
+        </div>
+        <div style={styles.exportBtn}>Export</div>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -80,5 +96,11 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     width: '100%',
+  },
+  exportBtn: {
+    padding: '10px',
+    backgroundColor: 'white',
+    marginTop: '3rem',
+    width: '100px',
   },
 };
