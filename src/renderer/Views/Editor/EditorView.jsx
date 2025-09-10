@@ -312,19 +312,19 @@ export default function EditorView() {
     setFolderContent(content);
   };
 
-  const onVideoPreviewClick = (videoObj) => {
-    setFilePath(videoObj.videoUrl);
-    setAbsolutePath(videoObj.path);
-    const playerManager = getPlayerManager();
-    playerManager.init();
-    if (playerRef.current) {
-      const videoElement = playerRef.current.el();
-      const overlay = videoElement.querySelector('.frame-overlay');
-      if (overlay) {
-        overlay.remove();
-      }
-    }
-  };
+  // const onVideoPreviewClick = (videoObj) => {
+  //   setFilePath(videoObj.videoUrl);
+  //   setAbsolutePath(videoObj.path);
+  //   const playerManager = getPlayerManager();
+  //   playerManager.init();
+  //   if (playerRef.current) {
+  //     const videoElement = playerRef.current.el();
+  //     const overlay = videoElement.querySelector('.frame-overlay');
+  //     if (overlay) {
+  //       overlay.remove();
+  //     }
+  //   }
+  // };
 
   const onApplyBtnClick = () => {
     const options = {
@@ -351,10 +351,10 @@ export default function EditorView() {
       <div style={styles.editorContainer}>
         <div style={styles.filtersContainer}>
           <div style={styles.recordingsList}>
-            <FolderPath
+            {/* <FolderPath
               currentPath={folderPath}
               setCurrentPath={setFolderPath}
-            />
+            /> */}
             <div style={styles.folderFileList}>
               {folderContent.map((item, index) => (
                 <div key={index}>
@@ -440,7 +440,7 @@ export default function EditorView() {
             onReady={handlePlayerReady}
           />
         </div> */}
-        <div style={styles.layoutsContainer}>
+        {/* <div style={styles.layoutsContainer}>
           {videoObjArray.map((videoObj) => (
             <div
               style={styles.layoutContainer}
@@ -449,7 +449,7 @@ export default function EditorView() {
               <img style={styles.layoutContainer} src={videoObj.previewUrl} />
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
     </>
   );
@@ -460,6 +460,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     marginTop: '2rem',
+    marginRight: '2rem',
   },
   importFileContainer: {
     position: 'absolute',

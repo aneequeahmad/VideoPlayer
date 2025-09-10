@@ -332,7 +332,7 @@ ipcMain.handle('process-frame', async (event, options) => {
           const date = today.getFullYear()+'.'+(today.getMonth()+1)+'.'+today.getDate();
           const time = today.getHours() + "." + today.getMinutes() + "." + today.getSeconds();
           const pathName = date+'-'+time;
-          const downloadsPath = path.join(app.getPath('downloads'), `recordings/${pathName}`);
+          const downloadsPath = path.join(app.getPath('downloads'), `recordings/${pathName}/assets`);
           fs.ensureDirSync(downloadsPath);
           const filePath = path.join(downloadsPath, filename);
           fs.writeFileSync(filePath, buffer);
@@ -373,6 +373,128 @@ ipcMain.handle('read-file-as-blob', async (event, filePath) => {
     throw error;
   }
 });
+
+// Updated simple side-by-side merge with audio handling
+ipcMain.handle('merge-videos-side-by-side', async (event, { videoPaths }) => {
+     const tempFiles: string[] = [];
+  
+  
+  try {
+    const tempOutputPath = path.join(__dirname, `side_by_side_simple_${Date.now()}.mp4`);
+    tempFiles.push(tempOutputPath);
+
+    // Get video info to check for audio streams
+    const videoInfo = await Promise.all(
+      videoPaths.map(getVideoInfo)
+    );
+
+    const hasAudio = videoInfo.map(info => info.hasAudio);
+    const targetDuration = Math.max(...videoInfo.map(info => info.duration));
+
+    let complexFilter = [
+      // Scale both videos to same height, maintain aspect ratio
+      '[0:v]scale=-1:360[left]',
+      '[1:v]scale=-1:360[right]',
+      
+      // Stack horizontally
+      '[left][right]hstack=inputs=2[outv]'
+    ];
+
+    let audioMap: string[] = [];
+    let outputOptions = ['-map [outv]'];
+
+    // Handle audio based on which videos have audio streams
+    if (hasAudio[0] && hasAudio[1]) {
+      // Both have audio - mix them
+      complexFilter.push('[0:a][1:a]amix=inputs=2:duration=first[aout]');
+      audioMap.push('-map [aout]');
+    } else if (hasAudio[0] && !hasAudio[1]) {
+      // Only first has audio - use it
+      audioMap.push('-map 0:a');
+    } else if (!hasAudio[0] && hasAudio[1]) {
+      // Only second has audio - use it
+      audioMap.push('-map 1:a');
+    }
+    // If neither has audio, no audio mapping
+
+    outputOptions = [...outputOptions, ...audioMap, `-t ${targetDuration}`, '-preset fast', '-crf 23'];
+
+    await new Promise((resolve, reject) => {
+      const command = ffmpeg();
+      
+      // Add both video inputs
+      videoPaths.forEach(path => command.input(path));
+
+      command.complexFilter(complexFilter)
+        .outputOptions(outputOptions)
+        .save(tempOutputPath)
+        .on('end', resolve)
+        .on('error', reject);
+    });
+
+    const buffer = await fs.readFile(tempOutputPath);
+    await cleanupTempFiles(tempFiles);
+
+    return {
+      success: true,
+      buffer: buffer,
+      size: buffer.length,
+      type: 'video/mp4',
+      hasAudio: hasAudio.some(has => has)
+    };
+
+  } catch (error) {
+    await cleanupTempFiles(tempFiles);
+    throw error;
+  }
+});
+
+
+// Helper function to get video information including audio streams
+async function getVideoInfo(videoPath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(videoPath, (err, metadata) => {
+      if (err) {
+        console.warn('Could not get video info, using defaults:', err);
+        resolve({
+          duration: 10,
+          hasAudio: false,
+          width: 640,
+          height: 360
+        });
+      } else {
+        const hasAudio = metadata.streams.some(stream => stream.codec_type === 'audio');
+        const videoStream = metadata.streams.find(stream => stream.codec_type === 'video');
+        
+        resolve({
+          duration: metadata.format.duration || 10,
+          hasAudio: hasAudio,
+          width: videoStream?.width || 640,
+          height: videoStream?.height || 360,
+          codec: videoStream?.codec_name || 'h264'
+        });
+      }
+    });
+  });
+}
+
+// // Helper function to get video duration (keep this for compatibility)
+// async function getVideoDuration(videoPath) {
+//   const info = await getVideoInfo(videoPath);
+//   return info.duration;
+// }
+
+async function cleanupTempFiles(files) {
+  for (const file of files) {
+    try {
+      if (fs.existsSync(file)) {
+        await fs.unlink(file);
+      }
+    } catch (err) {
+      console.warn('Could not delete temp file:', file, err);
+    }
+  }
+}
 
 app
   .whenReady()

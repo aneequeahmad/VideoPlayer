@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('ffmpegAPI', {
     ipcRenderer.invoke('remove-audio', input, output),
   generateThumbnail: (options) => 
     ipcRenderer.invoke('generate-thumbnail', options),
+  mergeVideosSideBySide: (data) => ipcRenderer.invoke('merge-videos-side-by-side', data),
 });
 contextBridge.exposeInMainWorld('electronAPI', {
     // Expose a function to save audio that invokes the main process handler

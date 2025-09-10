@@ -58,6 +58,25 @@ export const PlayersView = ({ videos }) => {
     }
   };
 
+  const onExportBtnClick = async () => {
+    const playingPaths = videos
+      .filter((v) => playingVideos.includes(v.videoUrl))
+      .map((v) => v.path);
+    console.log('VIDEOS ARE >>>>', playingPaths);
+    const mergedVideo = await window.ffmpegAPI.mergeVideosSideBySide({
+      videoPaths: playingPaths,
+    });
+    console.log('MERGED VIDEO IS >>>', mergedVideo);
+    const fileName = `MergedVideo.mp4`;
+    const result = await window.electronAPI.saveBlob(
+      mergedVideo.buffer,
+      fileName,
+    );
+    if (result.success) {
+      console.log('SAVE FILE AT PATH >>>>>', result.filePath);
+    }
+  };
+
   return (
     <>
       <div style={styles.playerViewContainer}>
@@ -68,11 +87,17 @@ export const PlayersView = ({ videos }) => {
             })}
         </div>
 
-        <div style={styles.controlsContainer}>
-          <ButtonControls />
-          <CustomSeekBar />
-        </div>
-        <div style={styles.exportBtn}>Export</div>
+        {!!playingVideos.length ? (
+          <div style={styles.controlsContainer}>
+            <ButtonControls />
+            <CustomSeekBar />
+          </div>
+        ) : null}
+        {playingVideos.length ? (
+          <div style={styles.exportBtn} onClick={onExportBtnClick}>
+            Export
+          </div>
+        ) : null}
       </div>
     </>
   );
@@ -102,5 +127,7 @@ const styles = {
     backgroundColor: 'white',
     marginTop: '3rem',
     width: '100px',
+    cursor: 'pointer',
+    textAlign: 'center',
   },
 };
