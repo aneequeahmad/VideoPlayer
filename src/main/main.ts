@@ -326,22 +326,47 @@ ipcMain.handle('process-frame', async (event, options) => {
 
 
 // Handle the 'save-blob' request from the renderer
-  ipcMain.handle('save-blob', async (event, buffer, filename) => {
+  ipcMain.handle('save-blob', async (event, buffer, filename, videoPath) => {
       try {
+         console.log(">>>>>>>>>>>>>>>>. 0 <<<<<<<<<<<<<<<<", videoPath)  
           const today = new Date();
           const date = today.getFullYear()+'.'+(today.getMonth()+1)+'.'+today.getDate();
           const time = today.getHours() + "." + today.getMinutes() + "." + today.getSeconds();
           const pathName = date+'-'+time;
-          const downloadsPath = path.join(app.getPath('downloads'), `recordings/${pathName}/assets`);
+          let downloadsPath = path.join(app.getPath('downloads'), `recordings/${pathName}/assets`);
+          if(videoPath) {
+            const dirPath = path.dirname(videoPath)
+            const pathBeforeAssets = dirPath.split('/').slice(0, -1).join('/');
+            downloadsPath = path.join(pathBeforeAssets, 'exports');
+            console.log(">>>>>>>>>>>>>>>>. 1 <<<<<<<<<<<<<<<<", downloadsPath)  
+          } 
           fs.ensureDirSync(downloadsPath);
           const filePath = path.join(downloadsPath, filename);
+          console.log("FILE PATH IN SAVE BLOB. >>>>>>>>>>>>>>>>>>", filePath)
           fs.writeFileSync(filePath, buffer);
           return { success: true, filePath };
       } catch (error: any) {
-          console.error('Failed to save audio:', error);
+          console.error('Failed to save file:', error);
           return { success: false, error: error.message };
       }
   });
+
+  // Handle the 'save-blob' request from the renderer
+  ipcMain.handle('copy-blob', async (event, buffer, filename, directoryPath) => {
+      try {
+          
+          fs.ensureDirSync(directoryPath);
+          const filePath = path.join(directoryPath, filename);
+             
+          // const filePath = path.join(path, filename);
+          fs.writeFileSync(filePath, buffer);
+          return { success: true, filePath };
+      } catch (error: any) {
+          console.error('Failed to copy file:', error);
+          return { success: false, error: error.message };
+      }
+  });
+
 
   ipcMain.handle('get-folder-content', async (event, folderPath) => {
     try {

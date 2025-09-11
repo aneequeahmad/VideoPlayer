@@ -22,7 +22,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
       const path = webUtils.getPathForFile(file);
       return path;
     },
-    saveBlob: (buffer: any, filename: String) => ipcRenderer.invoke('save-blob', buffer, filename),
+    saveBlob: (buffer: any, filename: String, videoPath: String) => ipcRenderer.invoke('save-blob', buffer, filename, videoPath),
+    copyBlob: (buffer: any, filename: String, path: String) => ipcRenderer.invoke('copy-blob', buffer, filename, path),
     getFolderContent: (folderPath: string) => ipcRenderer.invoke('get-folder-content', folderPath),
     readFileAsBlob: (filePath: string) => ipcRenderer.invoke('read-file-as-blob', filePath),
 });

@@ -59,18 +59,18 @@ export const PlayersView = ({ videos }) => {
   };
 
   const onExportBtnClick = async () => {
-    const playingPaths = videos
+    const videoPaths = videos
       .filter((v) => playingVideos.includes(v.videoUrl))
       .map((v) => v.path);
-    console.log('VIDEOS ARE >>>>', playingPaths);
+    console.log('VIDEOS ARE >>>>', videoPaths[0]);
     const mergedVideo = await window.ffmpegAPI.mergeVideosSideBySide({
-      videoPaths: playingPaths,
+      videoPaths: videoPaths,
     });
-    console.log('MERGED VIDEO IS >>>', mergedVideo);
     const fileName = `MergedVideo.mp4`;
     const result = await window.electronAPI.saveBlob(
       mergedVideo.buffer,
       fileName,
+      videoPaths[0],
     );
     if (result.success) {
       console.log('SAVE FILE AT PATH >>>>>', result.filePath);

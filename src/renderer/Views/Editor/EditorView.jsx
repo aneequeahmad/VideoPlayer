@@ -27,6 +27,9 @@ export default function EditorView() {
 
   useEffect(() => {
     fetchFolderContent(folderPath);
+
+    const folderTree = window.api.getFolderTree(rootPath);
+    console.log('FOLDER TREEEEE >>>>>>>>', folderTree);
   }, [folderPath]);
 
   // const handlePlayerReady = (player) => {
@@ -62,7 +65,6 @@ export default function EditorView() {
   const onFileChange = async (event) => {
     const file = event.target.files?.[0];
     const absoluteFilePath = await window.electronAPI.getFilePath(file);
-    console.log('ABSOLUTE PATH >>>>>', absoluteFilePath);
     setAbsolutePath(absoluteFilePath);
     const splitPath = absoluteFilePath.split(file.name);
     const item = {
@@ -70,8 +72,19 @@ export default function EditorView() {
       path: splitPath[0], //Setting path without name of file in it
       isFile: true,
     };
-    // console.log('absoluteFilePath IS >>>', absoluteFilePath);
     setFolderContent([...folderContent, item]);
+    // const arrayBuffer = await blob.arrayBuffer();
+    //   const buffer = new Uint8Array(arrayBuffer);
+    const vidBuffer = await fileToBuffer(file);
+    // Call the secure function from the preload script
+    const result = await window.electronAPI.copyBlob(
+      vidBuffer,
+      file.name,
+      folderPath,
+    );
+    if (result.success) {
+      console.log('File copied successfully ');
+    }
     // const vidBuffer = await fileToBuffer(file);
     // setVideoBuffer(vidBuffer);
     // if (file) {
@@ -89,14 +102,14 @@ export default function EditorView() {
   };
 
   // // Convert file to buffer
-  // const fileToBuffer = (file) => {
-  //   return new Promise((resolve, reject) => {
-  //     const reader = new FileReader();
-  //     reader.onload = () => resolve(new Uint8Array(reader.result));
-  //     reader.onerror = reject;
-  //     reader.readAsArrayBuffer(file);
-  //   });
-  // };
+  const fileToBuffer = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(new Uint8Array(reader.result));
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  };
 
   // const onRemoveAudioClick = async () => {
   //   const outputPath =
