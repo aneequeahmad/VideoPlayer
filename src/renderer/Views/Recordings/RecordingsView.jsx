@@ -2,6 +2,7 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import VideoPlayer from '../Editor/VideoPlayer';
 import BackButton from '../../Components/BackButton';
 import { FolderPath } from '../../Components/FolderPath';
+import { APP_VIEWS, getViewManager } from '../../../Managers/ViewManager';
 
 export default function RecordingsView() {
   const playerRef = useRef(null);
@@ -56,6 +57,11 @@ export default function RecordingsView() {
       setFolderContent(content);
     }
   };
+  const onEditBtnClick = () => {
+    let viewManager = getViewManager();
+    viewManager.pushView(APP_VIEWS.EDITOR_VIEW, { currentPath: currentPath });
+  };
+
   return (
     <>
       <BackButton />
@@ -78,6 +84,9 @@ export default function RecordingsView() {
               </div>
             </div>
           ))}
+          <div style={styles.editBtn} onClick={onEditBtnClick}>
+            Edit
+          </div>
         </div>
         {!!filePath ? (
           <div style={styles.videoPlayerContainer}>
@@ -110,4 +119,13 @@ const styles = {
     width: '400px',
   },
   folderPathContainer: { position: 'absolute', top: 10, left: 0 },
+  editBtn: {
+    width: '100px',
+    backgroundColor: 'white',
+    marginTop: '1rem',
+    padding: '0.5rem',
+    textAlign: 'center',
+    color: 'black',
+    cursor: 'pointer',
+  },
 };

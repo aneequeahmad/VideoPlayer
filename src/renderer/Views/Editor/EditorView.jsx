@@ -8,6 +8,7 @@ import { FolderPath } from '../../Components/FolderPath';
 import { getPlayerManager } from '../../../Managers/PlayerManager';
 import PlayersView from './PlayersView';
 import FolderTree from '../../Components/FolderTree';
+import { getViewManager } from '../../../Managers/ViewManager';
 
 export default function EditorView() {
   const playerRef = useRef(null);
@@ -25,6 +26,12 @@ export default function EditorView() {
   const [brightness, setBrightness] = useState(0);
   const [saturation, setSaturation] = useState(1.0);
   const [contrast, setContrast] = useState(1.0);
+
+  useEffect(() => {
+    const viewManager = getViewManager();
+    const params = viewManager.currentView.params;
+    setFolderPath(params?.currentPath);
+  }, []);
 
   // useEffect(async () => {
   //   fetchFolderContent(folderPath);
@@ -334,7 +341,8 @@ export default function EditorView() {
     };
     console.log('VIDEOOBJECT >>>', videoObj);
     let allVideoObjArray = [...videos, videoObj];
-    allVideoObjArray = allVideoObjArray.slice(-2);
+    console.log('ALL VIDEO OBJECTS ARRAY >>>>', allVideoObjArray);
+    allVideoObjArray = allVideoObjArray.slice(-3);
     setVideos(allVideoObjArray);
     //Reset EditFilters here
     setBrightness(0);

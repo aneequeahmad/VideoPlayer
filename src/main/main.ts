@@ -422,74 +422,115 @@ ipcMain.handle('read-file-as-blob', async (event, filePath) => {
 
 // Updated simple side-by-side merge with audio handling
 ipcMain.handle('merge-videos-side-by-side', async (event, { videoPaths }) => {
-     const tempFiles: string[] = [];
-  
+  const tempFiles: string[] = [];
   
   try {
     const tempOutputPath = path.join(__dirname, `side_by_side_simple_${Date.now()}.mp4`);
     tempFiles.push(tempOutputPath);
 
-    // Get video info to check for audio streams
+    // Get video info to check for audio streams and framerates
     const videoInfo = await Promise.all(
       videoPaths.map(getVideoInfo)
     );
 
     const hasAudio = videoInfo.map(info => info.hasAudio);
     const targetDuration = Math.max(...videoInfo.map(info => info.duration));
+    const framerates = videoInfo.map(info => info.fps || 30); // Default to 30 if not available
+    const targetFramerate = Math.max(...framerates); // Use the highest framerate
+    const numVideos = videoPaths.length;
 
-    let complexFilter = [
-      // Scale both videos to same height, maintain aspect ratio
-      '[0:v]scale=-1:360[left]',
-      '[1:v]scale=-1:360[right]',
+    // Build arrays for stream references
+    const scaledInputs: string[] = [];
+    const audioStreams: string[] = [];
+
+    // Start building the filter complex string
+    let filterComplex = '';
+
+    // Add scaling filters for each video with framerate conversion
+    for (let i = 0; i < numVideos; i++) {
+      filterComplex += `[${i}:v]scale=-1:360,fps=${targetFramerate}[scaled${i}];`;
+      scaledInputs.push(`[scaled${i}]`);
       
-      // Stack horizontally
-      '[left][right]hstack=inputs=2[outv]'
+      // Collect audio streams
+      if (hasAudio[i]) {
+        audioStreams.push(`[${i}:a]`);
+      }
+    }
+
+    // Add hstack filter for video
+    filterComplex += `${scaledInputs.join('')}hstack=inputs=${numVideos}[v]`;
+
+    // Handle audio
+    if (audioStreams.length > 0) {
+      filterComplex += ';';
+      if (audioStreams.length === 1) {
+        // Single audio stream - just copy it
+        filterComplex += `${audioStreams[0]}acopy[a]`;
+      } else {
+        // Multiple audio streams - mix them
+        filterComplex += `${audioStreams.join('')}amix=inputs=${audioStreams.length}:duration=first,volume=${audioStreams.length}[a]`;
+      }
+    }
+
+    // Build output options with proper framerate handling
+    const outputOptions = [
+      '-map', '[v]',
+      '-t', targetDuration.toString(),
+      '-preset', 'fast',
+      '-crf', '23',
+      '-shortest',
+      '-vsync', 'vfr', // Use variable framerate
+      '-movflags', '+faststart' // Enable faststart for web playback
     ];
 
-    let audioMap: string[] = [];
-    let outputOptions = ['-map [outv]'];
-
-    // Handle audio based on which videos have audio streams
-    if (hasAudio[0] && hasAudio[1]) {
-      // Both have audio - mix them
-      complexFilter.push('[0:a][1:a]amix=inputs=2:duration=first[aout]');
-      audioMap.push('-map [aout]');
-    } else if (hasAudio[0] && !hasAudio[1]) {
-      // Only first has audio - use it
-      audioMap.push('-map 0:a');
-    } else if (!hasAudio[0] && hasAudio[1]) {
-      // Only second has audio - use it
-      audioMap.push('-map 1:a');
+    // Add audio mapping if audio exists
+    if (audioStreams.length > 0) {
+      outputOptions.push('-map', '[a]');
+      outputOptions.push('-c:a', 'aac'); // Specify audio codec
+      outputOptions.push('-b:a', '128k'); // Set audio bitrate
+    } else {
+      outputOptions.push('-an'); // No audio
     }
-    // If neither has audio, no audio mapping
 
-    outputOptions = [...outputOptions, ...audioMap, `-t ${targetDuration}`, '-preset fast', '-crf 23'];
+    // Add video codec specification
+    outputOptions.push('-c:v', 'libx264'); // Specify video codec
+    outputOptions.push('-pix_fmt', 'yuv420p'); // Ensure compatible pixel format
 
     await new Promise((resolve, reject) => {
       const command = ffmpeg();
       
-      // Add both video inputs
+      // Add all video inputs
       videoPaths.forEach(path => command.input(path));
 
-      command.complexFilter(complexFilter)
+      command
+        .complexFilter(filterComplex)
         .outputOptions(outputOptions)
-        .save(tempOutputPath)
+        .output(tempOutputPath)
         .on('end', resolve)
-        .on('error', reject);
+        .on('error', (err) => {
+          console.error('FFmpeg error:', err);
+          reject(err);
+        })
+        .on('stderr', (stderrLine) => {
+          console.log('FFmpeg stderr:', stderrLine);
+        })
+        .run();
     });
 
     const buffer = await fs.readFile(tempOutputPath);
+    console.log("BUFFER LENGTH AFTER MERGE **************", buffer.length);
     await cleanupTempFiles(tempFiles);
-
+    
     return {
       success: true,
       buffer: buffer,
       size: buffer.length,
       type: 'video/mp4',
-      hasAudio: hasAudio.some(has => has)
+      hasAudio: audioStreams.length > 0
     };
 
   } catch (error) {
+    console.error('Error in ffmpeg command', error);
     await cleanupTempFiles(tempFiles);
     throw error;
   }
