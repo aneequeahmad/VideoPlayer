@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     copyBlob: (buffer: any, filename: String, path: String) => ipcRenderer.invoke('copy-blob', buffer, filename, path),
     getFolderContent: (folderPath: string) => ipcRenderer.invoke('get-folder-content', folderPath),
     readFileAsBlob: (filePath: string) => ipcRenderer.invoke('read-file-as-blob', filePath),
+    getFolderTree: async (dirPath) => await ipcRenderer.invoke("get-folder-tree", dirPath),
 });
 
 

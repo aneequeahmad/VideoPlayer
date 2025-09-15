@@ -7,12 +7,13 @@ import BackButton from '../../Components/BackButton';
 import { FolderPath } from '../../Components/FolderPath';
 import { getPlayerManager } from '../../../Managers/PlayerManager';
 import PlayersView from './PlayersView';
+import FolderTree from '../../Components/FolderTree';
 
 export default function EditorView() {
   const playerRef = useRef(null);
   // const [videoBuffer, setVideoBuffer] = useState(null);
   const [filePath, setFilePath] = useState('');
-  const [videoObjects, setVideoObjects] = useState([]);
+  const [videos, setVideos] = useState([]);
   // const [processedFrame, setProcessedFrame] = useState(null);
   // const [fileType, setFileType] = useState('video/mp4');
   const [folderPath, setFolderPath] = useState(
@@ -25,12 +26,12 @@ export default function EditorView() {
   const [saturation, setSaturation] = useState(1.0);
   const [contrast, setContrast] = useState(1.0);
 
-  useEffect(() => {
-    fetchFolderContent(folderPath);
+  // useEffect(async () => {
+  //   fetchFolderContent(folderPath);
 
-    const folderTree = window.api.getFolderTree(rootPath);
-    console.log('FOLDER TREEEEE >>>>>>>>', folderTree);
-  }, [folderPath]);
+  //   // const folderTree = await window.electronAPI.getFolderTree(folderPath);
+  //   // console.log('FOLDER TREEEEE >>>>>>>>', folderTree);
+  // }, [folderPath]);
 
   // const handlePlayerReady = (player) => {
   //   playerRef.current = player;
@@ -278,52 +279,74 @@ export default function EditorView() {
     }
   };
 
-  const onItemClick = async (path, item) => {
-    if (item && item.isFile) {
-      const playerManager = getPlayerManager();
-      playerManager.init();
-      // Handle file opening logic here
-      const fileBuffer = await window.electronAPI.readFileAsBlob(path);
-      const blob = new Blob([fileBuffer]);
-      const videoUrl = URL.createObjectURL(blob);
+  // const onItemClick = async (path, item) => {
+  //   console.log('PATH AND ITEM *********', path, item);
+  //   if (item && item.isFile) {
+  //     const playerManager = getPlayerManager();
+  //     playerManager.init();
+  //     // Handle file opening logic here
+  //     const fileBuffer = await window.electronAPI.readFileAsBlob(path);
+  //     const blob = new Blob([fileBuffer]);
+  //     const videoUrl = URL.createObjectURL(blob);
 
-      const result = await window.ffmpegAPI.generateThumbnail({
-        videoBuffer: fileBuffer,
-        timeInSeconds: 0,
-        width: 320,
-        height: 240,
-        quality: 2,
-      });
+  //     const result = await window.ffmpegAPI.generateThumbnail({
+  //       videoBuffer: fileBuffer,
+  //       timeInSeconds: 0,
+  //       width: 320,
+  //       height: 240,
+  //       quality: 2,
+  //     });
 
-      if (result.success) {
-        const blob = new Blob([result.thumbnail], { type: 'image/jpeg' });
-        const previewUrl = URL.createObjectURL(blob);
-        const videoObj = {
-          videoUrl: videoUrl,
-          previewUrl: previewUrl,
-          path: path,
-        };
-        let allVideoObjArray = [...videoObjects, videoObj];
-        allVideoObjArray = allVideoObjArray.slice(-2);
-        setVideoObjects(allVideoObjArray);
-      } else {
-        //Thumbnail generation failed
-      }
+  //     if (result.success) {
+  //       const blob = new Blob([result.thumbnail], { type: 'image/jpeg' });
+  //       const previewUrl = URL.createObjectURL(blob);
+  //       const videoObj = {
+  //         videoUrl: videoUrl,
+  //         previewUrl: previewUrl,
+  //         path: path,
+  //       };
+  //       let allVideoObjArray = [...videoObjects, videoObj];
+  //       allVideoObjArray = allVideoObjArray.slice(-2);
+  //       setVideoObjects(allVideoObjArray);
+  //     } else {
+  //       //Thumbnail generation failed
+  //     }
 
-      //Reset EditFilters here
-      setBrightness(0);
-      setSaturation(1.0);
-      setContrast(1.0);
-    } else {
-      fetchFolderContent(path);
-    }
+  //     //Reset EditFilters here
+  //     setBrightness(0);
+  //     setSaturation(1.0);
+  //     setContrast(1.0);
+  //   } else {
+  //     fetchFolderContent(path);
+  //   }
+  // };
+  const onFileClick = async (path) => {
+    const playerManager = getPlayerManager();
+    playerManager.init();
+    // Handle file opening logic here
+    const fileBuffer = await window.electronAPI.readFileAsBlob(path);
+    const blob = new Blob([fileBuffer]);
+    const videoUrl = URL.createObjectURL(blob);
+
+    const videoObj = {
+      videoUrl: videoUrl,
+      path: path,
+    };
+    console.log('VIDEOOBJECT >>>', videoObj);
+    let allVideoObjArray = [...videos, videoObj];
+    allVideoObjArray = allVideoObjArray.slice(-2);
+    setVideos(allVideoObjArray);
+    //Reset EditFilters here
+    setBrightness(0);
+    setSaturation(1.0);
+    setContrast(1.0);
   };
 
-  const fetchFolderContent = async (path) => {
-    setFolderPath(path);
-    const content = await window.electronAPI.getFolderContent(path);
-    setFolderContent(content);
-  };
+  // const fetchFolderContent = async (path) => {
+  //   setFolderPath(path);
+  //   const content = await window.electronAPI.getFolderContent(path);
+  //   setFolderContent(content);
+  // };
 
   // const onVideoPreviewClick = (videoObj) => {
   //   setFilePath(videoObj.videoUrl);
@@ -356,7 +379,7 @@ export default function EditorView() {
     // const playerManager = getPlayerManager();
     // playerManager.init();
   };
-  const videoObjArray = videoObjects.slice(-2);
+  console.log('ALL VIDEO OBJECTS ARRAY >>>>', videos);
 
   return (
     <>
@@ -369,7 +392,7 @@ export default function EditorView() {
               setCurrentPath={setFolderPath}
             /> */}
             <div style={styles.folderFileList}>
-              {folderContent.map((item, index) => (
+              {/* {folderContent.map((item, index) => (
                 <div key={index}>
                   <div
                     style={styles.item}
@@ -380,7 +403,8 @@ export default function EditorView() {
                     {item.name}
                   </div>
                 </div>
-              ))}
+              ))} */}
+              <FolderTree rootPath={folderPath} onFileClick={onFileClick} />
             </div>
             <div style={styles.importFileContainer}>
               <ImportFile onFileChange={onFileChange} />
@@ -445,7 +469,7 @@ export default function EditorView() {
             </div>
           </div>
         </div>
-        <PlayersView videos={videoObjArray} />
+        <PlayersView videos={videos} setVideos={setVideos} />
         {/* <div style={styles.videoPlayerContainer}>
           <VideoPlayer
             src={filePath}
@@ -499,7 +523,7 @@ const styles = {
     marginBottom: '1rem',
   },
   folderFileList: {
-    width: '200px',
+    width: '300px',
     overflowY: 'auto',
     padding: '10px 0',
     height: '100vh',

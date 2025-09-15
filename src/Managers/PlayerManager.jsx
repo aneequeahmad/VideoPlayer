@@ -50,8 +50,9 @@ class PlayerManager extends EventManager {
     this.trigger(PLAYER_MANAGER_EVENTS.VIDEOS_CHANGED);
   }
   removeVideo(url) {
-    let index = this.videos.findIndex(url);
+    let index = this.videos.findIndex((videoUrl) => videoUrl === url);
     this.videos.splice(index, 1);
+    console.log('AFTER REMOVING VIDEOS >>>>', this.videos);
     this.trigger(PLAYER_MANAGER_EVENTS.VIDEOS_CHANGED);
   }
 

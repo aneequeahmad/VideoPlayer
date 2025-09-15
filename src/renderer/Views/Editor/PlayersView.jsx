@@ -8,7 +8,7 @@ import {
 import { ButtonControls } from '../../Controls/ButtonControls';
 import VideoPlayer from './VideoPlayer';
 
-export const PlayersView = ({ videos }) => {
+export const PlayersView = ({ videos, setVideos }) => {
   const [playingVideos, setPlayingVideos] = useState([]);
   // const prevVideosRef = useRef([]);
   const playerManagerRef = useRef(null);
@@ -77,14 +77,24 @@ export const PlayersView = ({ videos }) => {
     }
   };
 
+  const onRemoveVideo = (url) => {
+    const playerManager = getPlayerManager();
+    playerManager.removeVideo(url);
+    setVideos((prev) => prev.filter((v) => v.videoUrl !== url));
+  };
+
   return (
     <>
       <div style={styles.playerViewContainer}>
         <div style={{ display: 'flex' }}>
           {playingVideos &&
-            playingVideos.map((videoUrl) => {
-              return <VideoPlayer key={videoUrl} src={videoUrl} />;
-            })}
+            playingVideos.map((videoUrl) => (
+              <VideoPlayer
+                key={videoUrl}
+                src={videoUrl}
+                onCrossBtnClick={onRemoveVideo}
+              />
+            ))}
         </div>
 
         {!!playingVideos.length ? (

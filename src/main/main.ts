@@ -350,6 +350,22 @@ ipcMain.handle('process-frame', async (event, options) => {
           return { success: false, error: error.message };
       }
   });
+  function getFolderTree(dirPath) {
+  const stats = fs.statSync(dirPath);
+  const info = {
+    name: path.basename(dirPath),
+    path: dirPath,
+    type: stats.isDirectory() ? "folder" : "file",
+  };
+
+  if (stats.isDirectory()) {
+    info.children = fs.readdirSync(dirPath).map((child) =>
+      getFolderTree(path.join(dirPath, child))
+    );
+  }
+  return info;
+}
+
 
   // Handle the 'save-blob' request from the renderer
   ipcMain.handle('copy-blob', async (event, buffer, filename, directoryPath) => {
@@ -365,6 +381,11 @@ ipcMain.handle('process-frame', async (event, options) => {
           console.error('Failed to copy file:', error);
           return { success: false, error: error.message };
       }
+  });
+
+     // ✅ Listen for requests from React
+  ipcMain.handle("get-folder-tree", (event, dirPath) => {
+      return getFolderTree(dirPath);
   });
 
 

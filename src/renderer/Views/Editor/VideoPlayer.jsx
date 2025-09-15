@@ -10,7 +10,7 @@ import {
 } from '../../../Managers/PlayerManager';
 import { ButtonControls } from '../../Controls/ButtonControls';
 
-export const VideoPlayer = ({ options, onReady, src }) => {
+export const VideoPlayer = ({ options, onReady, src, onCrossBtnClick }) => {
   const videoRef = useRef(null);
   const playerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -110,9 +110,12 @@ export const VideoPlayer = ({ options, onReady, src }) => {
   };
 
   return (
-    <div style={{ width: '100%' }}>
+    <div style={{ width: '100%', position: 'relative' }}>
       <div data-vjs-player>
         <div ref={videoRef}></div>
+      </div>
+      <div style={styles.crossBtn} onClick={() => onCrossBtnClick(src)}>
+        x
       </div>
     </div>
   );
@@ -121,6 +124,16 @@ export const VideoPlayer = ({ options, onReady, src }) => {
 export default VideoPlayer;
 
 const styles = {
+  crossBtn: {
+    position: 'absolute',
+    top: '0',
+    right: '0',
+    width: '20px',
+    textAlign: 'center',
+    borderRadius: '50%',
+    backgroundColor: 'white',
+    cursor: 'pointer',
+  },
   // controlsContainer: {
   //   position: 'absolute',
   //   display: 'flex',
