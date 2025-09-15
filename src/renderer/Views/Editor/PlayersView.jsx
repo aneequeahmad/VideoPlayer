@@ -66,7 +66,7 @@ export const PlayersView = ({ videos, setVideos }) => {
     const mergedVideo = await window.ffmpegAPI.mergeVideosSideBySide({
       videoPaths: videoPaths,
     });
-    const fileName = `MergedVideo.mp4`;
+    const fileName = `mergedVideo${Date.now()}.mp4`;
     const result = await window.electronAPI.saveBlob(
       mergedVideo.buffer,
       fileName,

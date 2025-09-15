@@ -24,14 +24,14 @@ const FolderNode = ({ node, onFileClick }) => {
               />
             ))}
         </div>
-      ) : (
+      ) : node.name !== '.DS_Store' ? (
         <div
           style={{ cursor: 'pointer' }}
           onClick={() => onFileClick(node.path)}
         >
           📄 {node.name}
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
@@ -50,6 +50,7 @@ export default function FolderTree({ rootPath, onFileClick }) {
     }
     fetchTree();
   }, [rootPath]);
+  console.log('FOLDER TREE >>>>>', tree);
 
   return (
     <div>
