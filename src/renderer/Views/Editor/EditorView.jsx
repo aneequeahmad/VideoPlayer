@@ -70,54 +70,54 @@ export default function EditorView() {
   //   }
   // };
 
-  const onFileChange = async (event) => {
-    const file = event.target.files?.[0];
-    const absoluteFilePath = await window.electronAPI.getFilePath(file);
-    setAbsolutePath(absoluteFilePath);
-    const splitPath = absoluteFilePath.split(file.name);
-    const item = {
-      name: file.name,
-      path: splitPath[0], //Setting path without name of file in it
-      isFile: true,
-    };
-    setFolderContent([...folderContent, item]);
-    // const arrayBuffer = await blob.arrayBuffer();
-    //   const buffer = new Uint8Array(arrayBuffer);
-    const vidBuffer = await fileToBuffer(file);
-    // Call the secure function from the preload script
-    const result = await window.electronAPI.copyBlob(
-      vidBuffer,
-      file.name,
-      folderPath,
-    );
-    if (result.success) {
-      console.log('File copied successfully ');
-    }
-    // const vidBuffer = await fileToBuffer(file);
-    // setVideoBuffer(vidBuffer);
-    // if (file) {
-    //   const objectURL = URL.createObjectURL(file);
-    //   setFilePath(objectURL);
-    //   setFileType(file.type);
-    //   // You can add further processing of the file here
-    //   //Reset EditFilters here
-    //   setBrightness(0);
-    //   setSaturation(1.0);
-    //   setContrast(1.0);
-    // } else {
-    //   console.log('No file selected');
-    // }
-  };
+  // const onFileChange = async (event) => {
+  //   const file = event.target.files?.[0];
+  //   const absoluteFilePath = await window.electronAPI.getFilePath(file);
+  //   setAbsolutePath(absoluteFilePath);
+  //   const splitPath = absoluteFilePath.split(file.name);
+  //   const item = {
+  //     name: file.name,
+  //     path: splitPath[0], //Setting path without name of file in it
+  //     isFile: true,
+  //   };
+  //   // setFolderContent([...folderContent, item]);
+  //   // const arrayBuffer = await blob.arrayBuffer();
+  //   //   const buffer = new Uint8Array(arrayBuffer);
+  //   const vidBuffer = await fileToBuffer(file);
+  //   // Call the secure function from the preload script
+  //   const result = await window.electronAPI.copyBlob(
+  //     vidBuffer,
+  //     file.name,
+  //     folderPath,
+  //   );
+  //   if (result.success) {
+  //     console.log('File copied successfully ');
+  //   }
+  // const vidBuffer = await fileToBuffer(file);
+  // setVideoBuffer(vidBuffer);
+  // if (file) {
+  //   const objectURL = URL.createObjectURL(file);
+  //   setFilePath(objectURL);
+  //   setFileType(file.type);
+  //   // You can add further processing of the file here
+  //   //Reset EditFilters here
+  //   setBrightness(0);
+  //   setSaturation(1.0);
+  //   setContrast(1.0);
+  // } else {
+  //   console.log('No file selected');
+  // }
+  //};
 
   // // Convert file to buffer
-  const fileToBuffer = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(new Uint8Array(reader.result));
-      reader.onerror = reject;
-      reader.readAsArrayBuffer(file);
-    });
-  };
+  // const fileToBuffer = (file) => {
+  //   return new Promise((resolve, reject) => {
+  //     const reader = new FileReader();
+  //     reader.onload = () => resolve(new Uint8Array(reader.result));
+  //     reader.onerror = reject;
+  //     reader.readAsArrayBuffer(file);
+  //   });
+  // };
 
   // const onRemoveAudioClick = async () => {
   //   const outputPath =
@@ -331,6 +331,7 @@ export default function EditorView() {
     const playerManager = getPlayerManager();
     playerManager.init();
     // Handle file opening logic here
+    console.log('PATH IS >>>>>', path);
     const fileBuffer = await window.electronAPI.readFileAsBlob(path);
     const blob = new Blob([fileBuffer]);
     const videoUrl = URL.createObjectURL(blob);
@@ -414,9 +415,9 @@ export default function EditorView() {
               ))} */}
               <FolderTree rootPath={folderPath} onFileClick={onFileClick} />
             </div>
-            <div style={styles.importFileContainer}>
+            {/* <div style={styles.importFileContainer}>
               <ImportFile onFileChange={onFileChange} />
-            </div>
+            </div> */}
           </div>
           <div>
             <div style={styles.filterBtn} onClick={onRotateBtnClick}>

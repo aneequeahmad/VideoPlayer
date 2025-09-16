@@ -1,5 +1,7 @@
 // FolderTree.jsx
 import React, { useEffect, useState } from 'react';
+import ImportFile from './ImportFile';
+import { fileToBuffer } from '../../Utils';
 
 const FolderNode = ({ node, onFileClick }) => {
   const [expanded, setExpanded] = useState(false);
@@ -52,14 +54,61 @@ export default function FolderTree({ rootPath, onFileClick }) {
   }, [rootPath]);
   console.log('FOLDER TREE >>>>>', tree);
 
+  const onFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    const absoluteFilePath = await window.electronAPI.getFilePath(file);
+    //const splitPath = absoluteFilePath.split(file.name);
+    const item = {
+      name: file.name,
+      path: absoluteFilePath, //Setting path without name of file in it
+      type: 'file',
+    };
+    console.log('ITEM IS *********', item);
+    const assetsFolder = tree.children.find(
+      (child) => child.name === 'assets' && child.type === 'folder',
+    );
+    if (assetsFolder) {
+      // Add the new object to assets children array
+      assetsFolder.children.push(item);
+      console.log('Object added to assets directory', assetsFolder.path);
+    } else {
+      console.log('Assets folder not found');
+    }
+    // Update the tree state to reflect the new file addition
+    setTree({ ...tree });
+    const vidBuffer = await fileToBuffer(file);
+    // Call the secure function from the preload script
+    const result = await window.electronAPI.copyBlob(
+      vidBuffer,
+      file.name,
+      assetsFolder.path,
+    );
+    if (result.success) {
+      console.log('File copied successfully to ********* ', result.filePath);
+    }
+  };
+
   return (
     <div>
-      {/* <h3>Folder Structure</h3> */}
-      {tree ? (
-        <FolderNode node={tree} onFileClick={onFileClick} />
-      ) : (
-        <p>Loading...</p>
-      )}
+      <div>
+        {/* <h3>Folder Structure</h3> */}
+        {tree ? (
+          <FolderNode node={tree} onFileClick={onFileClick} />
+        ) : (
+          <p>Loading...</p>
+        )}
+      </div>
+      <div style={styles.importFileContainer}>
+        <ImportFile onFileChange={onFileChange} />
+      </div>
     </div>
   );
 }
+
+const styles = {
+  importFileContainer: {
+    position: 'absolute',
+    top: '3.7rem',
+    left: '10px',
+  },
+};

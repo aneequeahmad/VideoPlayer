@@ -65,3 +65,12 @@ export const toHHMMSS = (secs) => {
       return 'eq=brightness=0'; // Default filter
   }
 }
+
+export const fileToBuffer = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(new Uint8Array(reader.result));
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+}; 
