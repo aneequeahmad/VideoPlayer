@@ -23,6 +23,7 @@ export const PlayersView = ({ videos, setVideos }) => {
     onVideosUpdated();
 
     return () => {
+      playerManager.removeAllVideos();
       playerManager.off(PLAYER_MANAGER_EVENTS.VIDEOS_CHANGED, onVideosUpdated);
     };
   }, []);
@@ -66,7 +67,7 @@ export const PlayersView = ({ videos, setVideos }) => {
     const mergedVideo = await window.ffmpegAPI.mergeVideosSideBySide({
       videoPaths: videoPaths,
     });
-    const fileName = `mergedVideo${Date.now()}.mp4`;
+    const fileName = `${Date.now()}.mp4`;
     const result = await window.electronAPI.saveBlob(
       mergedVideo.buffer,
       fileName,

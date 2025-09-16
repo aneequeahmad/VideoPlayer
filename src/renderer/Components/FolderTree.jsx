@@ -63,7 +63,6 @@ export default function FolderTree({ rootPath, onFileClick }) {
       path: absoluteFilePath, //Setting path without name of file in it
       type: 'file',
     };
-    console.log('ITEM IS *********', item);
     const assetsFolder = tree.children.find(
       (child) => child.name === 'assets' && child.type === 'folder',
     );

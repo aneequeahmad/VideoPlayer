@@ -55,6 +55,10 @@ class PlayerManager extends EventManager {
     console.log('AFTER REMOVING VIDEOS >>>>', this.videos);
     this.trigger(PLAYER_MANAGER_EVENTS.VIDEOS_CHANGED);
   }
+  removeAllVideos() {
+    this.videos = [];
+    this.trigger(PLAYER_MANAGER_EVENTS.VIDEOS_CHANGED);
+  }
 
   addAudio(url) {
     this.audios.push(url);
